@@ -1,73 +1,60 @@
-# React + TypeScript + Vite
+# NexusERP (Monorepo Edition)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Overview
+NexusERP is an enterprise-grade ERP system built with a modern Monorepo architecture. It separates concerns into distinct workspaces for Frontend, Backend API, and Core Domain Logic.
 
-Currently, two official plugins are available:
+## Architecture
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This project uses npm workspaces:
 
-## React Compiler
+- **`apps/web`**: React + Vite Admin Dashboard.
+  - Features: Users, Roles, Inventory, Orders, Audit Logs.
+  - Visuals: Data-dense tables, Sidebar navigation, Action Toolbars.
+- **`apps/api`**: Serverless Backend (Netlify Functions).
+  - Features: Authentication, Transactional operations (Order -> Stock), Role-based access.
+  - Database: PostgreSQL.
+- **`packages/core`**: Shared Domain Logic & Types.
+  - Contains: Type definitions (`User`, `Order`, `Product`), Pure business rules (Validation, Calculation).
+  - Used by both Web and API apps.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Prerequisites
+- Node.js v18+
+- PostgreSQL Database
+- Netlify CLI (`npm install -g netlify-cli`)
 
-## Expanding the ESLint configuration
+## Setup
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
+    This installs dependencies for all workspaces and links them.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+2.  **Environment Variables**:
+    Create `.env` in root:
+    ```env
+    DATABASE_URL=postgres://user:pass@host:5432/dbname
+    JWT_SECRET=your_super_secret_key
+    ```
+    (Note: Netlify Functions pick up env vars from Netlify context or `.env`)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+3.  **Run Locally**:
+    ```bash
+    npm run dev:web  # Starts Frontend (Vite) on localhost:5173
+    npm run dev:api  # Starts Backend (Netlify Dev) on localhost:8888
+    ```
+    For strict integrated dev:
+    ```bash
+    netlify dev
+    ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Building
+To build the frontend and core packages:
+```bash
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Security
+- **RBAC**: Roles are managed in `apps/api/functions/roles.ts`.
+- **Audit Logs**: Critical actions (Stock adjustments, User modifications) are logged via `audit_logs` table.
+- **Validation**: Business rules (e.g., negative stock prevention) are enforced in `@nexus/core`.

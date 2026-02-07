@@ -1,90 +1,104 @@
 [build]
-  command = "npm run build"
-  publish = "dist"
+  command = "npm run build --workspace=@nexus/web"
+  publish = "apps/web/dist"
+  functions = "apps/api/functions"
 
 [dev]
-  command = "npm run dev"
-  framework = "#static"
+  command = "npm run dev --workspace=@nexus/web"
   targetPort = 5173
+  publish = "apps/web/dist"
+  functions = "apps/api/functions"
 
 # Auth Routes
 [[redirects]]
   from = "/api/auth/*"
-  to = "/.netlify/functions/auth"
+  to = "/api/functions/auth"
   status = 200
 
 # Product Routes
 [[redirects]]
   from = "/api/products"
-  to = "/.netlify/functions/products"
+  to = "/api/functions/products"
   status = 200
 
 [[redirects]]
   from = "/api/products/*"
-  to = "/.netlify/functions/products"
+  to = "/api/functions/products"
   status = 200
 
 # Stock Routes
 [[redirects]]
   from = "/api/stock"
-  to = "/.netlify/functions/stock"
+  to = "/api/functions/stock"
   status = 200
 
 [[redirects]]
   from = "/api/stock/*"
-  to = "/.netlify/functions/stock"
+  to = "/api/functions/stock"
   status = 200
 
 # Order Routes
 [[redirects]]
   from = "/api/orders"
-  to = "/.netlify/functions/orders"
+  to = "/api/functions/orders"
   status = 200
 
 [[redirects]]
   from = "/api/orders/*"
-  to = "/.netlify/functions/orders"
+  to = "/api/functions/orders"
   status = 200
 
 # Dashboard Route
 [[redirects]]
   from = "/api/dashboard"
-  to = "/.netlify/functions/dashboard"
+  to = "/api/functions/dashboard"
   status = 200
 
 # Users Route
 [[redirects]]
   from = "/api/users"
-  to = "/.netlify/functions/users"
+  to = "/api/functions/users"
   status = 200
 
 # Roles Route
 [[redirects]]
   from = "/api/roles"
-  to = "/.netlify/functions/roles"
+  to = "/api/functions/roles"
+  status = 200
+
+# Warehouses Route
+[[redirects]]
+  from = "/api/warehouses"
+  to = "/api/functions/warehouses"
   status = 200
 
 # Suppliers Route
 [[redirects]]
   from = "/api/suppliers"
-  to = "/.netlify/functions/suppliers"
+  to = "/api/functions/suppliers"
   status = 200
 
 # Purchase Orders Route
 [[redirects]]
   from = "/api/purchase-orders/*"
-  to = "/.netlify/functions/purchase_orders"
+  to = "/api/functions/purchase_orders"
   status = 200
 
 [[redirects]]
   from = "/api/purchase-orders"
-  to = "/.netlify/functions/purchase_orders"
+  to = "/api/functions/purchase_orders"
+  status = 200
+
+# Audit Logs Route
+[[redirects]]
+  from = "/api/audit-logs"
+  to = "/api/functions/audit_logs"
   status = 200
 
 # Customers Route
 [[redirects]]
   from = "/api/customers"
-  to = "/.netlify/functions/customers"
+  to = "/api/functions/customers"
   status = 200
 
 # Catch-all for frontend

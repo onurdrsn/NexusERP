@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "outDir": "./dist",
+        "rootDir": "./functions",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "paths": {
+            "@nexus/core": [
+                "../../packages/core/src"
+            ]
+        }
+    },
+    "include": [
+        "functions/**/*"
+    ],
+    "references": [
+        {
+            "path": "../../packages/core"
+        }
+    ]
+}
