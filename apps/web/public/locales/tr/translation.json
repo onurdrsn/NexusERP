@@ -15,6 +15,7 @@
         "users": "Kullanıcılar",
         "roles": "Roller",
         "auditLogs": "Denetim Kayıtları",
+        "sqlConsole": "SQL Konsolu",
         "masterData": "Ana Veriler",
         "products": "Ürünler",
         "categories": "Kategoriler",
@@ -26,7 +27,46 @@
         "purchaseOrders": "Satınalma Siparişleri",
         "salesOrders": "Satış Siparişleri",
         "stock": "Stok",
-        "orders": "Siparişler"
+        "orders": "Siparişler",
+        "status": "Durum",
+        "active": "Aktif",
+        "inactive": "Pasif",
+        "confirm": "Onayla",
+        "product": "Ürün",
+        "price": "Fiyat",
+        "initialStock": "Başlangıç Stoğu",
+        "minStock": "Min. Stok",
+        "sku": "SKU",
+        "addNew": "Yeni Ekle",
+        "editProduct": "Düzenle",
+        "export": "Dışa Aktar",
+        "exportSuccess": "Veriler başarıyla dışa aktarıldı",
+        "exportError": "Veri dışa aktarma hatası",
+        "exporting": "Dışa Aktarılıyor...",
+        "sqlConsoleSuccess": "SQL Konsolu başarıyla açıldı",
+        "sqlConsoleError": "SQL Konsolu açma hatası"
+    },
+    "users": {
+        "title": "Kullanıcı Yönetimi",
+        "addUser": "Yeni Kullanıcı Ekle",
+        "editUser": "Kullanıcıyı Düzenle",
+        "resetPassword": "Şifreyi Sıfırla",
+        "generatePassword": "Rastgele Şifre Oluştur",
+        "passwordPolicy": "Şifre en az 8 karakter olmalı, bir büyük harf, bir rakam ve bir özel karakter içermelidir.",
+        "tempPassword": "Geçici şifreyi girin:",
+        "resetSuccess": "Şifre başarıyla sıfırlandı!",
+        "resetError": "Şifre sıfırlama hatası",
+        "createSuccess": "Kullanıcı başarıyla oluşturuldu",
+        "updateSuccess": "Kullanıcı başarıyla güncellendi",
+        "updateError": "Kullanıcı güncelleme hatası",
+        "createError": "Kullanıcı oluşturma hatası",
+        "deleteConfirm": "Bu kullanıcıyı silmek istediğinize emin misiniz?",
+        "leaveBlank": "mevcut şifreyi korumak için boş bırakın",
+        "fullName": "Tam İsim",
+        "email": "E-posta Adresi",
+        "password": "Şifre",
+        "role": "Kullanıcı Rolü",
+        "isActive": "Aktiflik Durumu"
     },
     "dashboard": {
         "title": "Panel",
@@ -52,14 +92,27 @@
         "adjust": "Düzenle",
         "transfer": "Transfer"
     },
-    "orders": {
-        "title": "Siparişler",
-        "newOrder": "Yeni Sipariş",
-        "customer": "Müşteri",
-        "status": "Durum",
-        "total": "Toplam",
-        "items": "Kalemler",
-        "approve": "Onayla",
-        "create": "Sipariş Oluştur"
+    "master": {
+        "warehouses": {
+            "title": "Depolar",
+            "addNew": "Yeni Depo Ekle",
+            "name": "Depo Adı",
+            "location": "Konum"
+        },
+        "suppliers": {
+            "title": "Tedarikçiler",
+            "addNew": "Yeni Tedarikçi Ekle",
+            "name": "Tedarikçi Adı",
+            "email": "E-posta",
+            "phone": "Telefon"
+        },
+        "customers": {
+            "title": "Müşteriler",
+            "addNew": "Yeni Müşteri Ekle",
+            "name": "Müşteri Adı",
+            "email": "E-posta",
+            "phone": "Telefon",
+            "address": "Adres"
+        }
     }
 }

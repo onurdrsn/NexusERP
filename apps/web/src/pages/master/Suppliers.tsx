@@ -56,7 +56,7 @@ export const Suppliers = () => {
     const columns = [
         {
             key: 'name',
-            header: 'Supplier Name',
+            header: t('master.suppliers.name'),
             render: (item: Supplier) => (
                 <div className="flex items-center gap-2 font-medium text-slate-900">
                     <div className="w-8 h-8 rounded bg-orange-100 flex items-center justify-center text-orange-600">
@@ -66,8 +66,8 @@ export const Suppliers = () => {
                 </div>
             )
         },
-        { key: 'email', header: 'Email', render: (s: Supplier) => s.email || '-' },
-        { key: 'phone', header: 'Phone', render: (s: Supplier) => s.phone || '-' },
+        { key: 'email', header: t('master.suppliers.email'), render: (s: Supplier) => s.email || '-' },
+        { key: 'phone', header: t('master.suppliers.phone'), render: (s: Supplier) => s.phone || '-' },
     ];
 
     return (
@@ -84,14 +84,13 @@ export const Suppliers = () => {
                 isLoading={loading}
             />
 
-            {/* Create Supplier Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-                        <h2 className="text-xl font-bold mb-4">Add New Supplier</h2>
+                        <h2 className="text-xl font-bold mb-4">{t('master.suppliers.addNew')}</h2>
                         <form onSubmit={handleCreate} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700">Name</label>
+                                <label className="block text-sm font-medium text-slate-700">{t('master.suppliers.name')}</label>
                                 <input
                                     type="text"
                                     className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
@@ -101,7 +100,7 @@ export const Suppliers = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700">Email</label>
+                                <label className="block text-sm font-medium text-slate-700">{t('master.suppliers.email')}</label>
                                 <input
                                     type="email"
                                     className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
@@ -110,7 +109,7 @@ export const Suppliers = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700">Phone</label>
+                                <label className="block text-sm font-medium text-slate-700">{t('master.suppliers.phone')}</label>
                                 <input
                                     type="text"
                                     className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"

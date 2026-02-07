@@ -3,6 +3,7 @@ import { DataTable } from '../../components/ui/DataTable';
 import { ActionToolbar } from '../../components/ui/ActionToolbar';
 import api from '../../services/api';
 import { useTranslation } from 'react-i18next';
+import { toast } from '../../store/useToastStore';
 import { User } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -29,6 +30,38 @@ export const AuditLogs = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleExport = () => {
+        if (logs.length === 0) {
+            toast.warning('Dışa aktarılacak veri bulunamadı');
+            return;
+        }
+
+        const headers = ['Date', 'User', 'Action', 'Details'];
+        const csvRows = logs.map(log => [
+            format(new Date(log.created_at), 'yyyy-MM-dd HH:mm:ss'),
+            log.user_email || 'System',
+            log.action,
+            JSON.stringify(log.details).replace(/"/g, '""')
+        ]);
+
+        const csvContent = [
+            headers.join(','),
+            ...csvRows.map(row => row.map(cell => `"${cell}"`).join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `audit_logs_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        toast.success(t('common.exportSuccess') || 'Veriler başarıyla dışa aktarıldı');
     };
 
     useEffect(() => {
@@ -73,7 +106,7 @@ export const AuditLogs = () => {
             <ActionToolbar
                 title={t('common.auditLogs') || 'Audit Logs'}
                 onSearch={(term) => console.log(term)}
-                onExport={() => alert('Exporting...')}
+                onExport={handleExport}
             />
 
             <DataTable

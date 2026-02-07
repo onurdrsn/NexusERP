@@ -57,7 +57,7 @@ export const Customers = () => {
     const columns = [
         {
             key: 'name',
-            header: 'Customer Name',
+            header: t('master.customers.name'),
             render: (c: Customer) => (
                 <div className="flex items-center gap-2 font-medium text-slate-900">
                     <div className="w-8 h-8 rounded bg-blue-50 flex items-center justify-center text-blue-600">
@@ -67,9 +67,9 @@ export const Customers = () => {
                 </div>
             )
         },
-        { key: 'email', header: 'Email', render: (c: Customer) => c.email || '-' },
-        { key: 'phone', header: 'Phone', render: (c: Customer) => c.phone || '-' },
-        { key: 'address', header: 'Address', render: (c: Customer) => <span className="truncate max-w-xs block" title={c.address}>{c.address || '-'}</span> },
+        { key: 'email', header: t('master.customers.email'), render: (c: Customer) => c.email || '-' },
+        { key: 'phone', header: t('master.customers.phone'), render: (c: Customer) => c.phone || '-' },
+        { key: 'address', header: t('master.customers.address'), render: (c: Customer) => <span className="truncate max-w-xs block" title={c.address}>{c.address || '-'}</span> },
     ];
 
     return (
@@ -86,14 +86,13 @@ export const Customers = () => {
                 isLoading={loading}
             />
 
-            {/* Create Customer Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-                        <h2 className="text-xl font-bold mb-4">Add New Customer</h2>
+                        <h2 className="text-xl font-bold mb-4">{t('master.customers.addNew')}</h2>
                         <form onSubmit={handleCreate} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700">Name</label>
+                                <label className="block text-sm font-medium text-slate-700">{t('master.customers.name')}</label>
                                 <input
                                     type="text"
                                     className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
@@ -103,7 +102,7 @@ export const Customers = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700">Email</label>
+                                <label className="block text-sm font-medium text-slate-700">{t('master.customers.email')}</label>
                                 <input
                                     type="email"
                                     className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
@@ -113,7 +112,7 @@ export const Customers = () => {
                             </div>
                             <div className="grid grid-cols-1 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700">Phone</label>
+                                    <label className="block text-sm font-medium text-slate-700">{t('master.customers.phone')}</label>
                                     <input
                                         type="text"
                                         className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
@@ -123,7 +122,7 @@ export const Customers = () => {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700">Address</label>
+                                <label className="block text-sm font-medium text-slate-700">{t('master.customers.address')}</label>
                                 <textarea
                                     className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
                                     value={formData.address}

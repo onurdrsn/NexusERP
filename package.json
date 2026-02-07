@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "netlify dev",
     "dev:web": "npm run dev --workspace=@nexus/web",
-    "dev:api": "netlify dev",
+    "dev:core": "npm run dev --workspace=@nexus/core",
+    "dev:api": "netlify dev --filter @nexus/api",
     "build": "npm run build --workspaces",
     "lint": "npm run lint --workspaces"
   },

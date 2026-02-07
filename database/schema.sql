@@ -8,6 +8,7 @@ CREATE TABLE users (
   password_hash TEXT NOT NULL,
   full_name TEXT NOT NULL,
   is_active BOOLEAN DEFAULT true,
+  requires_password_change BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT now()
 );
 

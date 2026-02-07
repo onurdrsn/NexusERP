@@ -32,7 +32,8 @@ export const Orders = () => {
         setLoading(true);
         try {
             const res = await api.get('/orders');
-            setOrders(res.data);
+            setOrders(Array.isArray(res.data) ? res.data : []);
+            if (!Array.isArray(res.data)) console.error('Invalid orders data:', res.data);
         } catch (error) {
             console.error(error);
         } finally {

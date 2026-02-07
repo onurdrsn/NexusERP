@@ -22,7 +22,7 @@ interface DataTableProps<T> {
 }
 
 export function DataTable<T extends { id: string | number }>({
-    data,
+    data = [],
     columns,
     isLoading,
     onRowClick,

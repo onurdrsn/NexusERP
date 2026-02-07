@@ -38,15 +38,22 @@ This project uses npm workspaces:
     ```
     (Note: Netlify Functions pick up env vars from Netlify context or `.env`)
 
-3.  **Run Locally**:
-    ```bash
-    npm run dev:web  # Starts Frontend (Vite) on localhost:5173
-    npm run dev:api  # Starts Backend (Netlify Dev) on localhost:8888
-    ```
-    For strict integrated dev:
-    ```bash
-    netlify dev
-    ```
+3.  **Run Locally** (Recommended Workflow):
+
+    *   **Terminal 1 (Core Watch)**:
+        ```bash
+        npm run dev:core
+        # Watches @nexus/core for changes.
+        ```
+
+    *   **Terminal 2 (App Server)**:
+        ```bash
+        npm run dev:api
+        # Starts Netlify Dev (API on 8888) AND Frontend (Vite on 5173).
+        # Access the app at: http://localhost:8888
+        ```
+
+    > **Note:** Do not run `npm run dev:web` separately if `dev:api` is running. Netlify Dev manages the web process for you.
 
 ## Building
 To build the frontend and core packages:

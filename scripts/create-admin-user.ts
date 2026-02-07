@@ -1,5 +1,5 @@
-import { query } from '../netlify/functions/utils/db';
-import { hashPassword } from '../netlify/functions/utils/auth';
+import { query } from '../apps/api/functions/utils/db';
+import { hashPassword } from '../apps/api/functions/utils/auth';
 
 const createAdmin = async () => {
     const email = 'admin@example.com';

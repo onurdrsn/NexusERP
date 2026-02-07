@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
+import { toast } from '../store/useToastStore';
 import api from '../services/api';
 import { Lock, Mail, Loader2 } from 'lucide-react';
 
@@ -20,7 +21,12 @@ export const Login = () => {
         try {
             const { data } = await api.post('/auth/login', { email, password });
             login(data.user, data.token);
-            navigate('/dashboard');
+            if (data.user.requires_password_change) {
+                navigate('/change-password');
+            } else {
+                navigate('/dashboard');
+            }
+            toast.success('Login successful');
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message);
@@ -31,6 +37,7 @@ export const Login = () => {
             } else {
                 setError('An unexpected error occurred');
             }
+            toast.error(error);
         } finally {
             setLoading(false);
         }

@@ -65,9 +65,10 @@ const dashboardHandler: Parameters<typeof requireAuth>[0] = async (event, contex
       )
       SELECT 
           to_char(d.date, 'Mon DD') as name,
-          COALESCE(SUM(so.total_amount), 0) as sales
+          COALESCE(SUM(inv.total_amount), 0) as sales
       FROM dates d
       LEFT JOIN sales_orders so ON d.date = date(so.created_at) AND so.status IN ('APPROVED', 'SHIPPED', 'COMPLETED')
+      LEFT JOIN invoices inv ON so.id = inv.sales_order_id
       GROUP BY d.date
       ORDER BY d.date
     `);

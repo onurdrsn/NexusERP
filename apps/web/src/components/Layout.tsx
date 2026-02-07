@@ -9,6 +9,7 @@ import {
 import clsx from 'clsx';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
+import { ToastContainer } from './ui/Toast';
 
 interface NavItemProps {
     icon: any;
@@ -86,6 +87,7 @@ export const Layout = () => {
 
     return (
         <div className="flex h-screen bg-slate-100 font-sans">
+            <ToastContainer />
             {/* Sidebar */}
             <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0">
                 <div className="p-4 border-b border-slate-800">
@@ -113,6 +115,7 @@ export const Layout = () => {
                                 { label: t('common.users'), to: '/admin/users' },
                                 { label: t('common.roles'), to: '/admin/roles' },
                                 { label: t('common.auditLogs'), to: '/admin/audit-logs' },
+                                { label: t('common.sqlConsole'), to: '/admin/sql-console' },
                             ]}
                         />
                     </div>

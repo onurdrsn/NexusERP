@@ -2,11 +2,21 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { useAuthStore } from './store/useAuthStore';
-import { Login, Dashboard, Products, Orders, Stock, Users, Roles, Suppliers, PurchaseOrders, Customers, Warehouses, AuditLogs } from './pages';
+import { Login, ChangePassword, Dashboard, Products, Orders, Stock, Users, Roles, Suppliers, PurchaseOrders, Customers, Warehouses, AuditLogs, SQLConsole } from './pages';
 
 const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
+  const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated());
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.requires_password_change) {
+    return <Navigate to="/change-password" replace />;
+  }
+
+  return children;
 };
 
 function App() {
@@ -14,6 +24,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/change-password" element={<ChangePassword />} />
 
         <Route
           path="/"
@@ -28,6 +39,7 @@ function App() {
           <Route path="admin/users" element={<Users />} />
           <Route path="admin/roles" element={<Roles />} />
           <Route path="admin/audit-logs" element={<AuditLogs />} />
+          <Route path="admin/sql-console" element={<SQLConsole />} />
           <Route path="master/suppliers" element={<Suppliers />} />
           <Route path="master/customers" element={<Customers />} />
           <Route path="master/warehouses" element={<Warehouses />} />

@@ -8,6 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
+  root: __dirname,
   plugins: [react()],
   resolve: {
     alias: {
@@ -16,9 +17,10 @@ export default defineConfig({
   },
 
   server: {
+    port: 8888,
     proxy: {
       '/api': {
-        target: 'http://localhost:8888/app/functions',
+        target: 'http://localhost:5173/.netlify/functions',
         changeOrigin: true,
         rewrite: (path: string) => path.replace(/^\/api/, ''),
       },

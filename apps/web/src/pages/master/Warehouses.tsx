@@ -54,7 +54,7 @@ export const Warehouses = () => {
     const columns = [
         {
             key: 'name',
-            header: 'Warehouse Name',
+            header: t('master.warehouses.name'),
             render: (w: Warehouse) => (
                 <div className="flex items-center gap-2 font-medium text-slate-900">
                     <div className="w-8 h-8 rounded bg-teal-50 flex items-center justify-center text-teal-600">
@@ -64,7 +64,7 @@ export const Warehouses = () => {
                 </div>
             )
         },
-        { key: 'location', header: 'Location', render: (w: Warehouse) => w.location || '-' },
+        { key: 'location', header: t('master.warehouses.location'), render: (w: Warehouse) => w.location || '-' },
     ];
 
     return (
@@ -81,14 +81,13 @@ export const Warehouses = () => {
                 isLoading={loading}
             />
 
-            {/* Create Warehouse Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-                        <h2 className="text-xl font-bold mb-4">Add New Warehouse</h2>
+                        <h2 className="text-xl font-bold mb-4">{t('master.warehouses.addNew')}</h2>
                         <form onSubmit={handleCreate} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700">Name</label>
+                                <label className="block text-sm font-medium text-slate-700">{t('master.warehouses.name')}</label>
                                 <input
                                     type="text"
                                     className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
@@ -98,7 +97,7 @@ export const Warehouses = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700">Location</label>
+                                <label className="block text-sm font-medium text-slate-700">{t('master.warehouses.location')}</label>
                                 <input
                                     type="text"
                                     className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"

@@ -3,6 +3,8 @@ import api from '../services/api';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from '../components/ui/DataTable';
 import { ActionToolbar } from '../components/ui/ActionToolbar';
+import { Select } from '../components/ui/Select';
+import { toast } from '../store/useToastStore';
 import { Package, Trash2, Edit } from 'lucide-react';
 
 import type { Product } from '@nexus/core';
@@ -13,6 +15,8 @@ export const Products = () => {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -20,14 +24,16 @@ export const Products = () => {
         price: '0',
         initial_stock: '0',
         min_stock: '0',
-        unit: 'pcs'
+        unit: 'pcs',
+        is_active: true
     });
 
     const fetchProducts = async () => {
         setLoading(true);
         try {
             const res = await api.get('/products');
-            setProducts(res.data);
+            setProducts(Array.isArray(res.data) ? res.data : []);
+            if (!Array.isArray(res.data)) console.error('Invalid products data:', res.data);
         } catch (error) {
             console.error(error);
         } finally {
@@ -40,31 +46,64 @@ export const Products = () => {
     }, []);
 
     const handleDelete = async (id: string) => {
-        if (!confirm(t('common.deleteConfirm') || 'Are you sure?')) return;
-        try {
-            await api.delete(`/products/${id}`);
-            fetchProducts();
-        } catch (error) {
-            console.error(error);
+        if (confirm(t('common.deleteConfirm') || 'Are you sure you want to delete this product?')) {
+            try {
+                await api.delete(`/products/${id}`);
+                fetchProducts();
+                toast.success('Product deleted');
+            } catch (error) {
+                console.error(error);
+                toast.error('Failed to delete product');
+            }
         }
     };
 
-    const handleCreate = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.post('/products', {
+            const data = {
                 ...formData,
                 price: Number(formData.price),
                 initial_stock: Number(formData.initial_stock),
-                min_stock: Number(formData.min_stock)
-            });
+                min_stock: Number(formData.min_stock),
+                is_active: formData.is_active
+            };
+
+            if (isEditing && selectedProduct) {
+                await api.put(`/products/${selectedProduct.id}`, data);
+            } else {
+                await api.post('/products', data);
+            }
+
             setShowModal(false);
-            setFormData({ name: '', sku: '', price: '0', initial_stock: '0', min_stock: '0', unit: 'pcs' });
+            resetForm();
             fetchProducts();
+            toast.success(isEditing ? 'Product updated' : 'Product created');
         } catch (error) {
-            console.error(error);
-            alert('Failed to create product');
+            console.error('Error saving product:', error);
+            toast.error('Failed to save product');
         }
+    };
+
+    const resetForm = () => {
+        setFormData({ name: '', sku: '', price: '0', initial_stock: '0', min_stock: '0', unit: 'pcs', is_active: true });
+        setIsEditing(false);
+        setSelectedProduct(null);
+    };
+
+    const handleEditClick = (product: Product) => {
+        setSelectedProduct(product);
+        setFormData({
+            name: product.name,
+            sku: product.sku,
+            price: String(product.price),
+            initial_stock: String(product.stock),
+            min_stock: String(product.min_stock),
+            unit: product.unit || 'pcs',
+            is_active: product.is_active ?? true
+        });
+        setIsEditing(true);
+        setShowModal(true);
     };
 
     const columns = [
@@ -106,7 +145,10 @@ export const Products = () => {
             align: 'right' as const,
             render: (p: Product) => (
                 <div className="flex justify-end gap-2">
-                    <button className="text-slate-400 hover:text-indigo-600">
+                    <button
+                        onClick={() => handleEditClick(p)}
+                        className="text-slate-400 hover:text-indigo-600"
+                    >
                         <Edit size={16} />
                     </button>
                     <button
@@ -125,7 +167,7 @@ export const Products = () => {
             <ActionToolbar
                 title={t('common.products')}
                 onSearch={() => { }}
-                onAdd={() => setShowModal(true)}
+                onAdd={() => { resetForm(); setShowModal(true); }}
             />
 
             <DataTable
@@ -134,16 +176,18 @@ export const Products = () => {
                 isLoading={loading}
             />
 
-            {/* Create Modal */}
+            {/* Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-                        <h2 className="text-xl font-bold mb-4">{t('products.addNew')}</h2>
-                        <form onSubmit={handleCreate} className="space-y-4">
+                        <h2 className="text-xl font-bold mb-4">
+                            {isEditing ? t('common.editProduct') : t('common.addNew')}
+                        </h2>
+                        <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700">Name</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.name')}</label>
                                 <input
-                                    className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
+                                    className="w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2.5 text-sm"
                                     value={formData.name}
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                                     required
@@ -151,19 +195,19 @@ export const Products = () => {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700">SKU</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.sku')}</label>
                                     <input
-                                        className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
+                                        className="w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2.5 text-sm"
                                         value={formData.sku}
                                         onChange={e => setFormData({ ...formData, sku: e.target.value })}
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700">Price</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.price')}</label>
                                     <input
                                         type="number"
-                                        className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
+                                        className="w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2.5 text-sm"
                                         value={formData.price}
                                         onChange={e => setFormData({ ...formData, price: e.target.value })}
                                         required
@@ -172,26 +216,35 @@ export const Products = () => {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700">Initial Stock</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.initialStock')}</label>
                                     <input
                                         type="number"
-                                        className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
+                                        className="w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2.5 text-sm"
                                         value={formData.initial_stock}
                                         onChange={e => setFormData({ ...formData, initial_stock: e.target.value })}
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700">Min Stock</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.minStock')}</label>
                                     <input
                                         type="number"
-                                        className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
+                                        className="w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2.5 text-sm"
                                         value={formData.min_stock}
                                         onChange={e => setFormData({ ...formData, min_stock: e.target.value })}
                                         required
                                     />
                                 </div>
                             </div>
+                            <Select
+                                label={t('common.status')}
+                                options={[
+                                    { value: 'true', label: t('common.active') },
+                                    { value: 'false', label: t('common.inactive') }
+                                ]}
+                                value={formData.is_active ? 'true' : 'false'}
+                                onChange={(val) => setFormData({ ...formData, is_active: val === 'true' })}
+                            />
 
                             <div className="flex justify-end gap-3 mt-6">
                                 <button

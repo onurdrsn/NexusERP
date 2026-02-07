@@ -2,7 +2,6 @@
   "name": "@nexus/api",
   "private": true,
   "version": "0.1.0",
-  "type": "module",
   "scripts": {
     "build": "echo 'No build step for Netlify Functions yet'"
   },

@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 
 const api = axios.create({
-    baseURL: '/api', // Proxied to /app/functions via netlify.toml
+    baseURL: '/api',
 });
 
 api.interceptors.request.use((config) => {

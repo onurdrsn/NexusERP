@@ -1,160 +1,122 @@
-import { Handler } from '@netlify/functions';
 import { query } from './utils/db';
 import { requireAuth } from './utils/auth';
 import { apiResponse, apiError, handleOptions } from './utils/apiResponse';
+import { Router } from './utils/router';
+import { validateOrder, calculateOrderTotal, validateOrderStateTransition, OrderStatus } from '@nexus/core';
 
-const ordersHandler: Parameters<typeof requireAuth>[0] = async (event, context, user) => {
-    if (event.httpMethod === 'OPTIONS') return handleOptions();
+const router = new Router();
 
-    const path = event.path.replace('/api/orders', '').replace('/app/functions/orders', '');
-    const idMatch = path.match(/^\/([a-f0-9-]+)(\/.*)?$/);
-    const id = idMatch ? idMatch[1] : null;
-    const action = idMatch && idMatch[2] ? idMatch[2].replace('/', '') : null;
-
-    // GET /api/orders -> List
-    if (event.httpMethod === 'GET' && !id) {
-        try {
-            const result = await query(`
-        SELECT so.*, c.name as customer_name, 
-        (SELECT SUM(quantity * unit_price) FROM sales_order_items WHERE sales_order_id = so.id) as total_amount
-        FROM sales_orders so
-        JOIN customers c ON so.customer_id = c.id
-        ORDER BY created_at DESC
+// GET /api/orders
+router.get('/', async (event, context, params, user) => {
+    try {
+        const result = await query(`
+        SELECT o.*, c.name as customer_name 
+        FROM orders o
+        LEFT JOIN customers c ON o.customer_id = c.id
+        WHERE o.is_deleted = false
+        ORDER BY o.created_at DESC
       `);
-            return apiResponse(200, result.rows);
-        } catch (error) {
-            return apiError(500, 'Failed to fetch orders', error);
-        }
+        return apiResponse(200, result.rows || []);
+    } catch (error) {
+        return apiError(500, 'Failed to fetch orders', error);
     }
+});
 
-    // GET /api/orders/:id -> Detail
-    if (event.httpMethod === 'GET' && id && !action) {
-        try {
-            const orderRes = await query(`
-         SELECT so.*, c.name as customer_name 
-         FROM sales_orders so
-         JOIN customers c ON so.customer_id = c.id
-         WHERE so.id = $1
-       `, [id]);
+// GET /api/orders/:id
+router.get('/:id', async (event, context, params, user) => {
+    try {
+        const result = await query(`
+        SELECT o.*, c.name as customer_name,
+               json_agg(json_build_object(
+                 'product_id', oi.product_id,
+                 'quantity', oi.quantity,
+                 'unit_price', oi.unit_price,
+                 'product_name', p.name
+               )) as items
+        FROM orders o
+        LEFT JOIN customers c ON o.customer_id = c.id
+        LEFT JOIN order_items oi ON o.id = oi.order_id
+        LEFT JOIN products p ON oi.product_id = p.id
+        WHERE o.id = $1
+        GROUP BY o.id, c.name
+      `, [params.id]);
 
-            if (orderRes.rowCount === 0) return apiError(404, 'Order not found');
-
-            const itemsRes = await query(`
-         SELECT soi.*, p.name as product_name, p.sku 
-         FROM sales_order_items soi
-         JOIN products p ON soi.product_id = p.id
-         WHERE soi.sales_order_id = $1
-       `, [id]);
-
-            return apiResponse(200, { ...orderRes.rows[0], items: itemsRes.rows });
-        } catch (error) {
-            return apiError(500, 'Failed to fetch order', error);
-        }
+        if (result.rows.length === 0) return apiError(404, 'Order not found');
+        return apiResponse(200, result.rows[0]);
+    } catch (error) {
+        return apiError(500, 'Failed to fetch order', error);
     }
+});
 
-    // POST /api/orders -> Create Draft
-    if (event.httpMethod === 'POST' && !id) {
+// POST /api/orders
+router.post('/', async (event, context, params, user) => {
+    try {
+        if (!event.body) return apiError(400, 'Missing body');
+        const orderData = JSON.parse(event.body);
+
+        // Core Logic Validation
+        const validation = validateOrder(orderData);
+        if (!validation.isValid) {
+            return apiError(400, 'Invalid order data', validation.errors);
+        }
+
+        const totalAmount = calculateOrderTotal(orderData.items);
+
+        const client = await import('./utils/db').then(m => m.getClient());
         try {
-            if (!event.body) return apiError(400, 'Missing body');
-            const { customer_id, items } = JSON.parse(event.body); // items: [{ product_id, quantity, unit_price }]
+            await client.query('BEGIN');
 
-            const client = await import('./utils/db').then(m => m.getClient());
-            try {
-                await client.query('BEGIN');
+            const orderRes = await client.query(
+                `INSERT INTO orders (customer_id, status, total_amount, created_by)
+           VALUES ($1, $2, $3, $4) RETURNING id`,
+                [orderData.customer_id, 'draft', totalAmount, user!.id]
+            );
+            const orderId = orderRes.rows[0].id;
 
-                const orderRes = await client.query(
-                    `INSERT INTO sales_orders (customer_id, status) VALUES ($1, 'DRAFT') RETURNING id`,
-                    [customer_id]
+            for (const item of orderData.items) {
+                await client.query(
+                    `INSERT INTO order_items (order_id, product_id, quantity, unit_price)
+             VALUES ($1, $2, $3, $4)`,
+                    [orderId, item.product_id, item.quantity, item.unit_price]
                 );
-                const orderId = orderRes.rows[0].id;
-
-                for (const item of items) {
-                    await client.query(
-                        `INSERT INTO sales_order_items (sales_order_id, product_id, quantity, unit_price)
-              VALUES ($1, $2, $3, $4)`,
-                        [orderId, item.product_id, item.quantity, item.unit_price]
-                    );
-                }
-
-                await client.query('COMMIT');
-                return apiResponse(201, { id: orderId, message: 'Order created' });
-            } catch (err) {
-                await client.query('ROLLBACK');
-                throw err;
-            } finally {
-                client.release();
             }
-        } catch (error) {
-            return apiError(500, 'Failed to create order', error);
+
+            await client.query('COMMIT');
+            return apiResponse(201, { id: orderId, message: 'Order created' });
+        } catch (err) {
+            await client.query('ROLLBACK');
+            throw err;
+        } finally {
+            client.release();
         }
+    } catch (error) {
+        return apiError(500, 'Failed to create order', error);
     }
+});
 
-    // POST /api/orders/:id/approve -> Approve & Allocate Stock
-    if (event.httpMethod === 'POST' && id && action === 'approve') {
-        try {
-            const { warehouse_id } = JSON.parse(event.body || '{}');
-            if (!warehouse_id) return apiError(400, 'Warehouse ID required for approval');
+// PUT /api/orders/:id
+router.put('/:id', async (event, context, params, user) => {
+    try {
+        if (!event.body) return apiError(400, 'Missing body');
+        const { status } = JSON.parse(event.body);
+        const id = params.id;
 
-            const client = await import('./utils/db').then(m => m.getClient());
-            try {
-                await client.query('BEGIN');
+        // Fetch current status
+        const currentOrderRes = await query('SELECT status FROM orders WHERE id = $1', [id]);
+        if (currentOrderRes.rows.length === 0) return apiError(404, 'Order not found');
+        const currentStatus = currentOrderRes.rows[0].status as OrderStatus;
 
-                // Check status
-                const orderRes = await client.query('SELECT * FROM sales_orders WHERE id = $1 FOR UPDATE', [id]);
-                if (orderRes.rows.length === 0) throw new Error('Order not found');
-
-                const order = orderRes.rows[0];
-                // Core Logic Validation
-                const { validateOrderForApproval } = await import('@nexus/core');
-                validateOrderForApproval(order); // Types might mismatch if DB shape != Core shape, but let's assume close enough for now or cast
-
-                // Get items
-                const itemsRes = await client.query('SELECT * FROM sales_order_items WHERE sales_order_id = $1', [id]);
-
-                // Update Stock (Check if enough first?)
-                // Simple check: current stock view
-                // Ideally should lock stock rows but view is read-only.
-                // We will insert negative movements.
-                // Constraint check? Schema doesn't have constraint on quantity < 0.
-                // If we want to prevent negative stock, we need a check trigger or logic.
-                // For now, implementing logic check.
-
-                for (const item of itemsRes.rows) {
-                    const stockRes = await client.query(
-                        `SELECT SUM(quantity) as val FROM stock_movements WHERE product_id = $1 AND warehouse_id = $2`,
-                        [item.product_id, warehouse_id]
-                    );
-                    const currentStock = Number(stockRes.rows[0].val || 0);
-
-                    // Core Logic Validation
-                    const { validateStockForAllocation } = await import('@nexus/core');
-                    validateStockForAllocation(currentStock, item.quantity, item.product_id); // Throws if insufficient
-
-                    // Deduct Stock
-                    await client.query(
-                        `INSERT INTO stock_movements (product_id, warehouse_id, quantity, movement_type, reference_type, reference_id, created_by)
-              VALUES ($1, $2, $3, 'OUT', 'SALES_ORDER', $4, $5)`,
-                        [item.product_id, warehouse_id, -item.quantity, id, user.id]
-                    );
-                }
-
-                // Update Status
-                await client.query("UPDATE sales_orders SET status = 'APPROVED' WHERE id = $1", [id]);
-
-                await client.query('COMMIT');
-                return apiResponse(200, { message: 'Order approved and stock allocated' });
-            } catch (err: any) {
-                await client.query('ROLLBACK');
-                return apiError(400, err.message || 'Approval failed');
-            } finally {
-                client.release();
-            }
-        } catch (error) {
-            return apiError(500, 'Failed to approve order', error);
+        // Core Logic Transition Check
+        if (!validateOrderStateTransition(currentStatus, status)) {
+            return apiError(400, `Invalid status transition from ${currentStatus} to ${status}`);
         }
+
+        await query('UPDATE orders SET status = $1 WHERE id = $2', [status, id]);
+        return apiResponse(200, { message: `Order status updated to ${status}` });
+
+    } catch (error) {
+        return apiError(500, 'Failed to update order', error);
     }
+});
 
-    return apiError(404, `Not Found: ${path}`);
-};
-
-export const handler = requireAuth(ordersHandler);
+export const handler = requireAuth(router.handle.bind(router));
