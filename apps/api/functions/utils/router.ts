@@ -69,6 +69,13 @@ export class Router {
             path = '/' + parts.slice(1).join('/');
         }
 
+        // Also strip /api/<endpoint> prefix for production routing
+        // e.g., /api/users -> /
+        const apiMatch = path.match(/^\/api\/([^\/]+)(\/.*)?$/);
+        if (apiMatch) {
+            path = apiMatch[2] || '/';
+        }
+
         console.log(`[Router] ${method} ${path} (original: ${event.path})`);
         this.routes.forEach(r => console.log(`[Router] Checking pattern: ${r.pattern} - Match: ${r.pattern.test(path)}`));
 
