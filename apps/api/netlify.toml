@@ -107,6 +107,31 @@
   status = 200
 
 [[redirects]]
+  from = "/api/roles/*"
+  to = "/.netlify/functions/roles/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/roles"
+  to = "/.netlify/functions/roles"
+  status = 200
+
+[[redirects]]
+  from = "/api/sql/*"
+  to = "/.netlify/functions/sql/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/sql"
+  to = "/.netlify/functions/sql"
+  status = 200
+
+[[redirects]]
+  from = "/api/db-check"
+  to = "/.netlify/functions/db-check"
+  status = 200
+
+[[redirects]]
   from = "/api/ping"
   to = "/.netlify/functions/ping"
   status = 200
