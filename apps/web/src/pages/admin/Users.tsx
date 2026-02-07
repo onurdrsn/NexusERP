@@ -111,7 +111,7 @@ export const Users = () => {
     const columns = [
         {
             key: 'full_name',
-            header: t('common.name') || 'Name',
+            header: t('common.fullName') || 'Name',
             render: (user: User) => (
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-slate-500 font-bold text-xs">

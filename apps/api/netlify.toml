@@ -102,6 +102,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/dashboard/*"
+  to = "/.netlify/functions/dashboard/:splat"
+  status = 200
+
+[[redirects]]
   from = "/api/dashboard"
   to = "/.netlify/functions/dashboard"
   status = 200

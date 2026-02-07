@@ -1,5 +1,7 @@
 {
     "common": {
+        "fullName": "AD SOYAD",
+        "role": "Rol",
         "loading": "Yükleniyor...",
         "save": "Kaydet",
         "cancel": "İptal",
