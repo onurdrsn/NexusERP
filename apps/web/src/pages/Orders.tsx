@@ -5,6 +5,7 @@ import { DataTable } from '../components/ui/DataTable';
 import { ActionToolbar } from '../components/ui/ActionToolbar';
 import { Check, Eye } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from '../store/useToastStore';
 
 import type { Order, Customer, Product } from '@nexus/core';
 
@@ -63,11 +64,12 @@ export const Orders = () => {
         e.preventDefault();
         try {
             await api.post('/orders', newOrder);
+            toast.success(t('salesOrders.orderCreatedSuccessfully'));
             setShowModal(false);
             setNewOrder({ customer_id: '', items: [{ product_id: '', quantity: 1, unit_price: 0 }] });
             fetchData();
         } catch (err) {
-            alert('Failed to create order');
+            toast.error(t('salesOrders.failedToCreateOrder'));
         }
     };
 
@@ -75,9 +77,10 @@ export const Orders = () => {
         if (!confirm('Approve this order? Stock will be deducted.')) return;
         try {
             await api.post(`/orders/${id}/approve`);
+            toast.success(t('salesOrders.orderApproved'));
             fetchData();
         } catch (err: any) {
-            alert(err.response?.data?.error || 'Failed to approve order');
+            toast.error(err.response?.data?.error || t('salesOrders.failedToApproveOrder'));
         }
     };
 
@@ -115,28 +118,28 @@ export const Orders = () => {
     const columns = [
         {
             key: 'id',
-            header: 'Order ID',
+            header: t('salesOrders.orderId'),
             render: (order: Order) => <span className="font-mono text-xs">#{order.id.slice(0, 8)}</span>
         },
         {
             key: 'customer',
-            header: t('orders.customer'),
+            header: t('salesOrders.customer'),
             render: (order: Order) => <span className="font-medium text-slate-900">{order.customer_name}</span>
         },
         {
             key: 'date',
-            header: t('orders.date'),
+            header: t('salesOrders.date'),
             render: (order: Order) => <span className="text-slate-500 text-xs">{format(new Date(order.created_at), 'MMM d, yyyy')}</span>
         },
         {
             key: 'total',
-            header: t('orders.total'),
+            header: t('salesOrders.total'),
             align: 'right' as const,
             render: (order: Order) => <span className="font-mono font-bold">${Number(order.total_amount).toLocaleString()}</span>
         },
         {
             key: 'status',
-            header: t('orders.status'),
+            header: t('salesOrders.status'),
             render: (order: Order) => (
                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
                     {order.status}
@@ -153,7 +156,7 @@ export const Orders = () => {
                         <button
                             onClick={(e) => { e.stopPropagation(); handleApprove(order.id); }}
                             className="text-indigo-600 hover:text-indigo-900 mr-2"
-                            title="Approve"
+                            title={t('salesOrders.approve')}
                         >
                             <Check size={18} />
                         </button>
@@ -169,7 +172,7 @@ export const Orders = () => {
     return (
         <div className="space-y-6">
             <ActionToolbar
-                title={t('common.salesOrders')}
+                title={t('salesOrders.title')}
                 onSearch={() => { }}
                 onAdd={openNewOrderModal}
             />
@@ -184,23 +187,23 @@ export const Orders = () => {
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-                        <h2 className="text-xl font-bold mb-4">{t('orders.create')}</h2>
+                        <h2 className="text-xl font-bold mb-4">{t('salesOrders.create')}</h2>
                         <form onSubmit={handleCreateOrder} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700">Customer</label>
+                                <label className="block text-sm font-medium text-slate-700">{t('salesOrders.customer')}</label>
                                 <select
                                     className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
                                     value={newOrder.customer_id}
                                     onChange={e => setNewOrder({ ...newOrder, customer_id: e.target.value })}
                                     required
                                 >
-                                    <option value="">Select Customer</option>
+                                    <option value="">{t('salesOrders.selectCustomer')}</option>
                                     {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                 </select>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-700">Items</label>
+                                <label className="block text-sm font-medium text-slate-700">{t('salesOrders.items')}</label>
                                 {newOrder.items.map((item, idx) => (
                                     <div key={idx} className="flex gap-2">
                                         <select
@@ -209,7 +212,7 @@ export const Orders = () => {
                                             onChange={e => updateItem(idx, 'product_id', e.target.value)}
                                             required
                                         >
-                                            <option value="">Product</option>
+                                            <option value="">{t('salesOrders.selectProduct')}</option>
                                             {products.map(p => <option key={p.id} value={p.id}>{p.name} (${p.price})</option>)}
                                         </select>
                                         <input
@@ -231,7 +234,7 @@ export const Orders = () => {
                                     </div>
                                 ))}
                                 <button type="button" onClick={addItemRow} className="text-sm text-indigo-600 hover:text-indigo-800">
-                                    + Add Item
+                                    + {t('salesOrders.addItem')}
                                 </button>
                             </div>
 

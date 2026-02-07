@@ -4,6 +4,7 @@ import { ActionToolbar } from '../../components/ui/ActionToolbar';
 import api from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { Shield } from 'lucide-react';
+import { toast } from '../../store/useToastStore';
 
 interface Permission {
     id: number;
@@ -51,11 +52,12 @@ export const Roles = () => {
         e.preventDefault();
         try {
             await api.post('/roles', formData);
+            toast.success('Role created successfully');
             setShowModal(false);
             setFormData({ name: '', permissions: [] });
             fetchData();
         } catch (error) {
-            alert('Failed to create role');
+            toast.error('Failed to create role');
         }
     };
 

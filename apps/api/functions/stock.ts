@@ -4,6 +4,7 @@ import { requireAuth } from './utils/auth';
 import { apiResponse, apiError, handleOptions } from './utils/apiResponse';
 import { Router } from './utils/router';
 import { validateStockForAllocation } from '@nexus/core';
+import { logAudit, getIp } from './utils/auditLogger';
 
 const router = new Router();
 
@@ -11,7 +12,8 @@ const router = new Router();
 router.get('/', async (event, context, params, user) => {
     try {
         const result = await query(`
-        SELECT s.*, p.name as product_name, p.sku, w.name as warehouse_name 
+        SELECT s.product_id, s.warehouse_id, s.stock as total_stock, 
+               p.name as product_name, p.sku, w.name as warehouse_name 
         FROM stock_current s
         JOIN products p ON s.product_id = p.id
         JOIN warehouses w ON s.warehouse_id = w.id
@@ -63,6 +65,7 @@ router.post('/adjust', async (event, context, params, user) => {
             VALUES ($1, $2, $3, $4, $5, $6)`,
                 [product_id, warehouse_id, finalQty, type, 'MANUAL_ADJUSTMENT', user!.id]
             );
+            await logAudit(user!.id, 'STOCK_ADJUSTED', { product_id, warehouse_id, quantity, type, reason }, getIp(event));
             return apiResponse(201, { message: 'Stock adjusted' });
         } finally {
             client.release();
@@ -105,6 +108,8 @@ router.post('/transfer', async (event, context, params, user) => {
             VALUES ($1, $2, $3, 'TRANSFER_IN', 'TRANSFER', $4)`,
                 [product_id, to_warehouse_id, qty, user!.id]
             );
+
+            await logAudit(user!.id, 'STOCK_TRANSFERRED', { product_id, from_warehouse_id, to_warehouse_id, quantity }, getIp(event), client);
 
             await client.query('COMMIT');
             return apiResponse(201, { message: 'Transfer successful' });

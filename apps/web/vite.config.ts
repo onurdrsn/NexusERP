@@ -19,6 +19,11 @@ export default defineConfig({
   server: {
     port: 8888,
     proxy: {
+      '/api/orders': {
+        target: 'http://localhost:5173/.netlify/functions',
+        changeOrigin: true,
+        rewrite: (path: string) => path.replace(/^\/api\/orders/, '/sales-orders'),
+      },
       '/api': {
         target: 'http://localhost:5173/.netlify/functions',
         changeOrigin: true,

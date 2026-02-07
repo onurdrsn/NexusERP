@@ -181,7 +181,7 @@ export const Users = () => {
                 title={t('users.title')}
                 onSearch={(term) => console.log(term)}
                 onAdd={() => { resetForm(); setShowModal(true); }}
-                onExport={() => alert('Exporting...')}
+                onExport={() => toast.success('Exporting...')}
             />
 
             <DataTable

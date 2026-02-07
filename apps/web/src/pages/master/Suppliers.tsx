@@ -4,6 +4,7 @@ import { ActionToolbar } from '../../components/ui/ActionToolbar';
 import api from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { Truck } from 'lucide-react';
+import { toast } from '../../store/useToastStore';
 
 interface Supplier {
     id: string;
@@ -45,11 +46,12 @@ export const Suppliers = () => {
         e.preventDefault();
         try {
             await api.post('/suppliers', formData);
+            toast.success('Supplier created successfully');
             setShowModal(false);
             setFormData({ name: '', email: '', phone: '' });
             fetchData();
         } catch (error) {
-            alert('Failed to create supplier');
+            toast.error('Failed to create supplier');
         }
     };
 

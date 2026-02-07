@@ -4,6 +4,7 @@ import { ActionToolbar } from '../../components/ui/ActionToolbar';
 import api from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { Users } from 'lucide-react';
+import { toast } from '../../store/useToastStore';
 
 interface Customer {
     id: string;
@@ -46,11 +47,12 @@ export const Customers = () => {
         e.preventDefault();
         try {
             await api.post('/customers', formData);
+            toast.success('Customer created successfully');
             setShowModal(false);
             setFormData({ name: '', email: '', phone: '', address: '' });
             fetchData();
         } catch (error) {
-            alert('Failed to create customer');
+            toast.error('Failed to create customer');
         }
     };
 

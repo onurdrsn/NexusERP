@@ -110,6 +110,7 @@ export const Products = () => {
         {
             key: 'name',
             header: t('common.product') || 'Product',
+            width: '40%',
             render: (p: Product) => (
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-500">
@@ -126,16 +127,18 @@ export const Products = () => {
             key: 'price',
             header: t('common.price') || 'Price',
             align: 'right' as const,
-            render: (p: Product) => <span className="font-mono font-medium">${Number(p.price).toFixed(2)}</span>
+            width: '20%',
+            render: (p: Product) => <span className="font-mono font-medium">${Number(p.price || 0).toFixed(2)}</span>
         },
         {
             key: 'stock',
             header: t('common.stock') || 'Stock',
             align: 'center' as const,
+            width: '20%',
             render: (p: Product) => (
                 <span className={`px-2 py-0.5 rounded-full text-xs font-bold
-                    ${p.stock <= 5 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                    {p.stock}
+                    ${(p.stock || 0) <= 5 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                    {p.stock || 0}
                 </span>
             )
         },
@@ -143,17 +146,18 @@ export const Products = () => {
             key: 'actions',
             header: t('common.actions') || 'Actions',
             align: 'right' as const,
+            width: '20%',
             render: (p: Product) => (
                 <div className="flex justify-end gap-2">
                     <button
                         onClick={() => handleEditClick(p)}
-                        className="text-slate-400 hover:text-indigo-600"
+                        className="text-slate-400 hover:text-indigo-600 p-1"
                     >
                         <Edit size={16} />
                     </button>
                     <button
                         onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }}
-                        className="text-slate-400 hover:text-red-600"
+                        className="text-slate-400 hover:text-red-600 p-1"
                     >
                         <Trash2 size={16} />
                     </button>

@@ -11,6 +11,7 @@ interface AuditLog {
     id: string;
     user_email: string;
     action: string;
+    ip_address: string;
     details: any;
     created_at: string;
 }
@@ -89,6 +90,12 @@ export const AuditLogs = () => {
             key: 'action',
             header: 'Action',
             render: (log: AuditLog) => <span className="font-mono text-xs font-semibold text-indigo-600">{log.action}</span>
+        },
+        {
+            key: 'ip_address',
+            header: t('common.ipAddress') || 'IP Address',
+            render: (log: AuditLog) => <span className="font-mono text-xs text-slate-500">{log.ip_address || '0.0.0.0'}</span>,
+            width: '120px'
         },
         {
             key: 'details',

@@ -5,6 +5,7 @@ import api from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { Package } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from '../../store/useToastStore';
 
 interface PurchaseOrder {
     id: string;
@@ -75,11 +76,12 @@ export const PurchaseOrders = () => {
         e.preventDefault();
         try {
             await api.post('/purchase-orders', newOrder);
+            toast.success('Purchase order created successfully');
             setShowModal(false);
             setNewOrder({ supplier_id: '', items: [{ product_id: '', quantity: 1, price: 0 }] });
             fetchData();
         } catch (err) {
-            alert('Failed to create purchase order');
+            toast.error('Failed to create purchase order');
         }
     };
 
@@ -87,9 +89,10 @@ export const PurchaseOrders = () => {
         if (!confirm('Receive this order? This will increase stock levels.')) return;
         try {
             await api.post(`/purchase-orders/${po.id}/receive`);
+            toast.success('Stock received successfully');
             fetchData();
         } catch (err: any) {
-            alert(err.response?.data?.error || 'Failed to receive order');
+            toast.error(err.response?.data?.error || 'Failed to receive order');
         }
     };
 

@@ -56,22 +56,25 @@ const dashboardHandler: Parameters<typeof requireAuth>[0] = async (event, contex
 
         // 5. Sales History (Last 7 Days)
         const historyRes = await query(`
-      WITH dates AS (
-          SELECT generate_series(
-              CURRENT_DATE - INTERVAL '6 days',
-              CURRENT_DATE,
-              '1 day'::interval
-          )::date AS date
-      )
-      SELECT 
-          to_char(d.date, 'Mon DD') as name,
-          COALESCE(SUM(inv.total_amount), 0) as sales
-      FROM dates d
-      LEFT JOIN sales_orders so ON d.date = date(so.created_at) AND so.status IN ('APPROVED', 'SHIPPED', 'COMPLETED')
-      LEFT JOIN invoices inv ON so.id = inv.sales_order_id
-      GROUP BY d.date
-      ORDER BY d.date
-    `);
+            WITH dates AS (
+                SELECT generate_series(
+                    CURRENT_DATE - INTERVAL '6 days',
+                    CURRENT_DATE,
+                    '1 day'::interval
+                )::date AS date
+            )
+            SELECT 
+                to_char(d.date, 'Mon DD') as name,
+                COALESCE((
+                    SELECT SUM(i.total_amount) 
+                    FROM invoices i 
+                    JOIN sales_orders so_sub ON i.sales_order_id = so_sub.id 
+                    WHERE date(so_sub.created_at) = d.date 
+                    AND so_sub.status IN ('APPROVED', 'SHIPPED', 'COMPLETED')
+                ), 0) as sales
+            FROM dates d
+            ORDER BY d.date
+        `);
 
         return apiResponse(200, {
             stats: {

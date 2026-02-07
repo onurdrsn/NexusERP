@@ -38,7 +38,12 @@
         "minStock": "Min. Stock",
         "sku": "SKU",
         "addNew": "Add New",
-        "editProduct": "Edit Product"
+        "editProduct": "Edit Product",
+        "noRecordsFound": "No records found",
+        "ipAddress": "IP Address",
+        "filter": "Filter",
+        "add_new": "Add New",
+        "sqlConsoleError": "SQL Console opening error"
     },
     "users": {
         "title": "User Management",
@@ -118,5 +123,35 @@
             "phone": "Phone",
             "address": "Address"
         }
+    },
+    "salesOrders": {
+        "title": "Sales Orders",
+        "orderId": "Order No",
+        "customer": "Customer",
+        "date": "Date",
+        "total": "Total",
+        "status": "Status",
+        "actions": "Actions",
+        "approve": "Approve",
+        "create": "Create",
+        "selectCustomer": "Select Customer",
+        "selectProduct": "Select Product",
+        "addItem": "Add Item",
+        "items": "Items",
+        "orderCreatedSuccessfully": "Order created successfully",
+        "failedToCreateOrder": "Failed to create order",
+        "orderApproved": "Order approved",
+        "failedToApproveOrder": "Failed to approve order",
+        "orderApprove": "Order Approve",
+        "orderCreate": "Order Create",
+        "newOrder": "New Order",
+        "customerName": "Customer Name",
+        "customerEmail": "Customer Email",
+        "customerPhone": "Customer Phone",
+        "customerAddress": "Customer Address",
+        "orderDate": "Order Date",
+        "orderStatus": "Order Status",
+        "orderTotal": "Order Total",
+        "orderItems": "Order Items"
     }
 }

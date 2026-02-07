@@ -1,4 +1,16 @@
 import { HandlerResponse } from '@netlify/functions';
+import * as fs from 'fs';
+import * as path from 'path';
+
+const logFile = path.join('/tmp', 'api_debug.log');
+const log = (msg: string) => {
+    try {
+        const timestamp = new Date().toISOString();
+        fs.appendFileSync(logFile, `[${timestamp}] ${msg}\n`);
+    } catch (e) {
+        console.error('Failed to write to log file', e);
+    }
+};
 
 export const apiResponse = (statusCode: number, data: any): HandlerResponse => {
     return {
@@ -14,7 +26,9 @@ export const apiResponse = (statusCode: number, data: any): HandlerResponse => {
 };
 
 export const apiError = (statusCode: number, message: string, details?: any): HandlerResponse => {
-    console.error(`API Error ${statusCode}: ${message}`, details);
+    const errorMsg = `API Error ${statusCode}: ${message} - ${JSON.stringify(details)}`;
+    console.error(errorMsg);
+    log(errorMsg);
     return apiResponse(statusCode, { error: message, details });
 };
 

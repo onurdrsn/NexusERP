@@ -23,12 +23,62 @@
 
 [[redirects]]
   from = "/api/orders/*"
-  to = "/.netlify/functions/orders/:splat"
+  to = "/.netlify/functions/sales-orders/:splat"
   status = 200
 
 [[redirects]]
   from = "/api/orders"
-  to = "/.netlify/functions/orders"
+  to = "/.netlify/functions/sales-orders"
+  status = 200
+
+[[redirects]]
+  from = "/api/customers/*"
+  to = "/.netlify/functions/customers/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/customers"
+  to = "/.netlify/functions/customers"
+  status = 200
+
+[[redirects]]
+  from = "/api/suppliers/*"
+  to = "/.netlify/functions/suppliers/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/suppliers"
+  to = "/.netlify/functions/suppliers"
+  status = 200
+
+[[redirects]]
+  from = "/api/warehouses/*"
+  to = "/.netlify/functions/warehouses/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/warehouses"
+  to = "/.netlify/functions/warehouses"
+  status = 200
+
+[[redirects]]
+  from = "/api/purchase-orders/*"
+  to = "/.netlify/functions/purchase-orders/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/purchase-orders"
+  to = "/.netlify/functions/purchase-orders"
+  status = 200
+
+[[redirects]]
+  from = "/api/audit-logs/*"
+  to = "/.netlify/functions/audit-logs/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/audit-logs"
+  to = "/.netlify/functions/audit-logs"
   status = 200
 
 [[redirects]]

@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { t } from 'i18next';
 
 interface Column<T> {
     key: keyof T | string;
@@ -46,8 +47,11 @@ export function DataTable<T extends { id: string | number }>({
                                 <th
                                     key={idx}
                                     scope="col"
-                                    className={`px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider ${col.width ? `w-[${col.width}]` : ''}`}
-                                    style={{ textAlign: col.align || 'left' }}
+                                    className={`px-4 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider`}
+                                    style={{
+                                        textAlign: col.align || 'left',
+                                        width: col.width || 'auto'
+                                    }}
                                 >
                                     <div className="flex items-center gap-1 cursor-pointer hover:text-slate-900">
                                         {col.header}
@@ -62,7 +66,7 @@ export function DataTable<T extends { id: string | number }>({
                         {data.length === 0 ? (
                             <tr>
                                 <td colSpan={columns.length} className="px-4 py-12 text-center text-slate-500">
-                                    No records found
+                                    {t('common.noRecordsFound')}
                                 </td>
                             </tr>
                         ) : (
@@ -76,7 +80,10 @@ export function DataTable<T extends { id: string | number }>({
                                         <td
                                             key={colIdx}
                                             className="px-4 py-2.5 whitespace-nowrap text-slate-700 font-medium"
-                                            style={{ textAlign: col.align || 'left' }}
+                                            style={{
+                                                textAlign: col.align || 'left',
+                                                width: col.width || 'auto'
+                                            }}
                                         >
                                             {col.render ? col.render(item) : (item as any)[col.key]}
                                         </td>

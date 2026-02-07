@@ -9,7 +9,7 @@ router.get('/', async (event) => {
     try {
         // Basic select, in real app needs pagination
         const result = await query(`
-            SELECT a.id, u.email as user_email, a.action, a.metadata as details, a.created_at 
+            SELECT a.id, u.email as user_email, a.action, a.ip_address, a.metadata as details, a.created_at 
             FROM audit_logs a
             LEFT JOIN users u ON a.user_id = u.id
             ORDER BY a.created_at DESC

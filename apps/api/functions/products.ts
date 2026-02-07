@@ -1,9 +1,8 @@
-import { Handler } from '@netlify/functions';
 import { query } from './utils/db';
 import { requireAuth } from './utils/auth';
 import { apiResponse, apiError, handleOptions } from './utils/apiResponse';
 import { Router } from './utils/router';
-import { logAudit } from './utils/auditLogger';
+import { logAudit, getIp } from './utils/auditLogger';
 
 const router = new Router();
 
@@ -11,12 +10,11 @@ const router = new Router();
 router.get('/', async (event) => {
     try {
         const result = await query(`
-            SELECT p.*, pp.price, COALESCE(SUM(s.quantity), 0) as stock
+            SELECT p.*, 
+                   (SELECT price FROM product_prices WHERE product_id = p.id AND valid_to IS NULL LIMIT 1) as price,
+                   COALESCE((SELECT SUM(stock) FROM stock_current WHERE product_id = p.id), 0) as stock
             FROM products p
-            LEFT JOIN product_prices pp ON p.id = pp.product_id AND pp.valid_to IS NULL
-            LEFT JOIN stock_current s ON p.id = s.product_id
             WHERE p.is_deleted = false
-            GROUP BY p.id, pp.price, s.stock
             ORDER BY p.created_at DESC
         `);
         return apiResponse(200, result.rows || []);
@@ -60,19 +58,24 @@ router.post('/', async (event, context, params, user) => {
             );
 
             if (Number(initial_stock) > 0) {
+                console.log(`[Products] Adding initial stock ${initial_stock} for product ${productId}`);
                 // Get default warehouse for initial stock
                 const whRes = await client.query('SELECT id FROM warehouses LIMIT 1');
                 if (whRes.rows.length > 0) {
+                    const warehouseId = whRes.rows[0].id;
+                    console.log(`[Products] Using warehouse ${warehouseId}`);
                     await client.query(
                         `INSERT INTO stock_movements (product_id, warehouse_id, quantity, movement_type, reference_type, created_by)
                VALUES ($1, $2, $3, 'IN', 'INITIAL_STOCK', $4)`,
-                        [productId, whRes.rows[0].id, Number(initial_stock), user!.id]
+                        [productId, warehouseId, Number(initial_stock), user!.id]
                     );
+                } else {
+                    console.warn('[Products] No warehouse found for initial stock');
                 }
             }
 
             // Audit Log
-            await logAudit(user!.id, 'PRODUCT_CREATED', { sku, name, price, initial_stock }, client);
+            await logAudit(user!.id, 'PRODUCT_CREATED', { sku, name, price, initial_stock }, getIp(event), client);
 
             await client.query('COMMIT');
             return apiResponse(201, { id: productId, message: 'Product created' });
@@ -118,7 +121,7 @@ router.put('/:id', async (event, context, params, user) => {
             }
 
             // Audit Log
-            await logAudit(user!.id, 'PRODUCT_UPDATED', { targetId: id, name, price, is_active }, client);
+            await logAudit(user!.id, 'PRODUCT_UPDATED', { targetId: id, name, price, is_active }, getIp(event), client);
 
             await client.query('COMMIT');
             return apiResponse(200, { message: 'Product updated' });
@@ -140,7 +143,7 @@ router.delete('/:id', async (event, context, params) => {
         await query('UPDATE products SET is_deleted = true, is_active = false WHERE id = $1', [params.id]);
 
         // Audit Log
-        await logAudit((event as any).user?.id || 'SYSTEM', 'PRODUCT_DELETED', { targetId: params.id });
+        await logAudit((event as any).user?.id || 'SYSTEM', 'PRODUCT_DELETED', { targetId: params.id }, getIp(event));
 
         return apiResponse(200, { message: 'Product deleted' });
     } catch (error) {

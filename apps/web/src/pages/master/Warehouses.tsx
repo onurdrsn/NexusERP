@@ -4,6 +4,7 @@ import { ActionToolbar } from '../../components/ui/ActionToolbar';
 import api from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { Factory } from 'lucide-react';
+import { toast } from '../../store/useToastStore';
 
 interface Warehouse {
     id: string;
@@ -43,11 +44,12 @@ export const Warehouses = () => {
         e.preventDefault();
         try {
             await api.post('/warehouses', formData);
+            toast.success('Warehouse created successfully');
             setShowModal(false);
             setFormData({ name: '', location: '' });
             fetchData();
         } catch (error) {
-            alert('Failed to create warehouse');
+            toast.error('Failed to create warehouse');
         }
     };
 

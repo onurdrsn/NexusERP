@@ -58,6 +58,9 @@ export class Router {
         const method = event.httpMethod as HttpMethod;
         let path = event.path;
 
+        // Import log locally to avoid circular dep if needed, or just use console
+        console.log(`[Router] ${method} ${path}`);
+
         // Normalize path: strip /.netlify/functions/<funcName> if present
         const functionPrefix = '/.netlify/functions/';
         if (path.startsWith(functionPrefix)) {
@@ -67,6 +70,7 @@ export class Router {
         }
 
         console.log(`[Router] ${method} ${path} (original: ${event.path})`);
+        this.routes.forEach(r => console.log(`[Router] Checking pattern: ${r.pattern} - Match: ${r.pattern.test(path)}`));
 
         for (const route of this.routes) {
             if (route.method !== method) continue;

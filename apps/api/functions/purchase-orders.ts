@@ -2,31 +2,30 @@ import { Handler } from '@netlify/functions';
 import { query } from './utils/db';
 import { requireAuth } from './utils/auth';
 import { apiResponse, apiError, handleOptions } from './utils/apiResponse';
+import { logAudit, getIp } from './utils/auditLogger';
 
 const poHandler: Parameters<typeof requireAuth>[0] = async (event, context, user) => {
     if (event.httpMethod === 'OPTIONS') return handleOptions();
 
     const pathParts = event.path.split('/');
-    const id = pathParts.length > 4 ? pathParts[4] : null; // /api/purchase-orders/:id
-    const action = pathParts.length > 5 ? pathParts[5] : null; // /api/purchase-orders/:id/:action
+    const id = pathParts.length > 4 ? pathParts[4] : null;
+    const action = pathParts.length > 5 ? pathParts[5] : null;
 
     try {
-        // GET /api/purchase-orders
         if (event.httpMethod === 'GET' && !id) {
             const result = await query(`
-        SELECT po.id, s.name as supplier_name, po.status, po.created_at,
-               (SELECT COUNT(*) FROM purchase_order_items WHERE purchase_order_id = po.id) as item_count,
-               (SELECT SUM(quantity * price) FROM purchase_order_items WHERE purchase_order_id = po.id) as total_amount
-        FROM purchase_orders po
-        JOIN suppliers s ON po.supplier_id = s.id
-        ORDER BY po.created_at DESC
-      `);
+                SELECT po.id, s.name as supplier_name, po.status, po.created_at,
+                       (SELECT COUNT(*) FROM purchase_order_items WHERE purchase_order_id = po.id) as item_count,
+                       (SELECT SUM(quantity * price) FROM purchase_order_items WHERE purchase_order_id = po.id) as total_amount
+                FROM purchase_orders po
+                JOIN suppliers s ON po.supplier_id = s.id
+                ORDER BY po.created_at DESC
+            `);
             return apiResponse(200, result.rows);
         }
 
-        // POST /api/purchase-orders (Create Draft)
         if (event.httpMethod === 'POST' && !id) {
-            const { supplier_id, items } = JSON.parse(event.body || '{}'); // items: [{product_id, quantity, price}]
+            const { supplier_id, items } = JSON.parse(event.body || '{}');
 
             if (!supplier_id || !items || items.length === 0) {
                 return apiError(400, 'Supplier and items are required');
@@ -48,6 +47,8 @@ const poHandler: Parameters<typeof requireAuth>[0] = async (event, context, user
                         [poId, item.product_id, item.quantity, item.price]
                     );
                 }
+
+                await logAudit(user!.id, 'PURCHASE_ORDER_CREATED', { id: poId, supplier_id }, getIp(event), client);
 
                 await client.query('COMMIT');
                 return apiResponse(201, { id: poId, status: 'DRAFT' });
@@ -92,6 +93,8 @@ const poHandler: Parameters<typeof requireAuth>[0] = async (event, context, user
 
                 // Update PO Status
                 await client.query("UPDATE purchase_orders SET status = 'COMPLETED' WHERE id = $1", [id]);
+
+                await logAudit(user!.id, 'PURCHASE_ORDER_RECEIVED', { id }, getIp(event), client);
 
                 await client.query('COMMIT');
                 return apiResponse(200, { status: 'COMPLETED' });

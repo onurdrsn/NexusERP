@@ -25,7 +25,6 @@
         "operations": "Operasyonlar",
         "stockMovements": "Stok Hareketleri",
         "purchaseOrders": "Satınalma Siparişleri",
-        "salesOrders": "Satış Siparişleri",
         "stock": "Stok",
         "orders": "Siparişler",
         "status": "Durum",
@@ -44,7 +43,12 @@
         "exportError": "Veri dışa aktarma hatası",
         "exporting": "Dışa Aktarılıyor...",
         "sqlConsoleSuccess": "SQL Konsolu başarıyla açıldı",
-        "sqlConsoleError": "SQL Konsolu açma hatası"
+        "sqlConsoleError": "SQL Konsolu açma hatası",
+        "add_new": "Yeni Ekle",
+        "filter": "Filtrele",
+        "ipAddress": "IP Adresi",
+        "noRecordsFound": "Kayıt bulunamadı",
+        "salesOrders": "Satış Siparişleri"
     },
     "users": {
         "title": "Kullanıcı Yönetimi",
@@ -114,5 +118,35 @@
             "phone": "Telefon",
             "address": "Adres"
         }
+    },
+    "salesOrders": {
+        "title": "Satış Siparişleri",
+        "orderId": "Sipariş No",
+        "customer": "Müşteri",
+        "date": "Tarih",
+        "total": "Toplam",
+        "status": "Durum",
+        "actions": "İşlemler",
+        "approve": "Onayla",
+        "create": "Oluştur",
+        "selectCustomer": "Müşteri Seç",
+        "selectProduct": "Ürün Seç",
+        "addItem": "Ürün Ekle",
+        "items": "Ürünler",
+        "orderCreatedSuccessfully": "Sipariş başarıyla oluşturuldu",
+        "failedToCreateOrder": "Sipariş oluşturulamadı",
+        "orderApproved": "Sipariş onaylandı",
+        "failedToApproveOrder": "Sipariş onaylanamadı",
+        "orderApprove": "Sipariş Onayla",
+        "orderCreate": "Sipariş Oluştur",
+        "newOrder": "Yeni Sipariş",
+        "customerName": "Müşteri Adı",
+        "customerEmail": "Müşteri E-postası",
+        "customerPhone": "Müşteri Telefonu",
+        "customerAddress": "Müşteri Adresi",
+        "orderDate": "Sipariş Tarihi",
+        "orderStatus": "Sipariş Durumu",
+        "orderTotal": "Sipariş Toplamı",
+        "orderItems": "Sipariş Ürünleri"
     }
 }

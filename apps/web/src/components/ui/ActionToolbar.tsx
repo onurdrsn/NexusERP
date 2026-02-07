@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search, Plus, Filter, Download } from 'lucide-react';
+import { t } from 'i18next';
 
 interface ActionToolbarProps {
     title: string;
@@ -28,7 +29,7 @@ export const ActionToolbar = ({
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                         <input
                             type="text"
-                            placeholder="Search..."
+                            placeholder={t('common.search')}
                             className="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                             onChange={(e) => onSearch(e.target.value)}
                         />
@@ -39,7 +40,7 @@ export const ActionToolbar = ({
                     <button
                         onClick={onFilter}
                         className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-md border border-slate-300 transition-colors"
-                        title="Filter"
+                        title={t('common.filter')}
                     >
                         <Filter size={18} />
                     </button>
@@ -49,7 +50,7 @@ export const ActionToolbar = ({
                     <button
                         onClick={onExport}
                         className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-md border border-slate-300 transition-colors"
-                        title="Export"
+                        title={t('common.export')}
                     >
                         <Download size={18} />
                     </button>
@@ -63,7 +64,7 @@ export const ActionToolbar = ({
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md hover:bg-indigo-700 shadow-sm transition-all active:scale-95"
                     >
                         <Plus size={16} />
-                        <span>Add New</span>
+                        <span>{t('common.add_new')}</span>
                     </button>
                 )}
             </div>

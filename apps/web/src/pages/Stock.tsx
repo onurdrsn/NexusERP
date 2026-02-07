@@ -5,6 +5,7 @@ import { DataTable } from '../components/ui/DataTable';
 import { ActionToolbar } from '../components/ui/ActionToolbar';
 import { Package, TrendingUp, TrendingDown } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from '../store/useToastStore';
 
 import type { StockItem, StockMovement, Product } from '@nexus/core';
 
@@ -64,11 +65,12 @@ export const Stock = () => {
         e.preventDefault();
         try {
             await api.post('/stock/adjust', adjustment);
+            toast.success('Stock adjusted successfully');
             setShowModal(false);
             setAdjustment({ product_id: '', type: 'IN', quantity: 1, reason: '' });
             fetchData();
         } catch (err) {
-            alert('Failed to adjust stock');
+            toast.error('Failed to adjust stock');
         }
     };
 
@@ -109,24 +111,27 @@ export const Stock = () => {
         },
         { key: 'product_name', header: t('common.product') },
         {
-            key: 'type',
+            key: 'movement_type',
             header: t('stock.type'),
-            render: (m: StockMovement) => (
-                <span className={`flex items-center gap-1 text-xs font-bold
-                    ${m.type === 'IN' ? 'text-green-600' : 'text-red-600'}`}>
-                    {m.type === 'IN' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                    {m.type}
-                </span>
-            )
+            render: (m: any) => {
+                const isPositive = ['IN', 'TRANSFER_IN', 'COUNT_DIFF'].includes(m.movement_type) && m.quantity > 0;
+                return (
+                    <span className={`flex items-center gap-1 text-xs font-bold
+                        ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                        {isPositive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                        {m.movement_type}
+                    </span>
+                );
+            }
         },
         {
             key: 'quantity',
             header: t('stock.quantity'),
             align: 'right' as const,
-            render: (m: StockMovement) => <span className="font-mono font-medium">{m.quantity}</span>
+            render: (m: any) => <span className="font-mono font-medium">{m.quantity}</span>
         },
-        { key: 'reason', header: t('stock.reason'), render: (m: StockMovement) => <span className="italic text-slate-500">{m.reason}</span> },
-        { key: 'created_by', header: 'User', render: (m: StockMovement) => <span className="text-xs bg-slate-100 px-2 py-0.5 rounded">{m.created_by}</span> }
+        { key: 'reference_type', header: t('stock.reason'), render: (m: any) => <span className="italic text-slate-500 uppercase text-[10px]">{m.reference_type}</span> },
+        { key: 'user_name', header: 'User', render: (m: any) => <span className="text-xs bg-slate-100 px-2 py-0.5 rounded">{m.user_name || m.created_by}</span> }
     ];
 
     return (
