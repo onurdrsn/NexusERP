@@ -79,9 +79,9 @@ export class Router {
 
         console.log(`[Router] ${method} ${path}`);
 
-        // Normalize path: strip /api/<endpoint> prefix
-        // e.g., /api/users -> /
-        const apiMatch = path.match(/^\/api\/([^\/]+)(\/.*)?$/);
+        // Normalize path: strip optional /api/<endpoint> or /<endpoint> prefix
+        // e.g. /api/users or /users -> /
+        const apiMatch = path.match(/^\/(?:api\/)?([^\/]+)(\/.*)?$/);
         if (apiMatch) {
             path = apiMatch[2] || '/';
         }

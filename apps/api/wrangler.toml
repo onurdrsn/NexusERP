@@ -7,7 +7,7 @@ compatibility_flags = ["nodejs_compat"]
 NODE_ENV = "production"
 
 [[routes]]
-pattern = "api.nexus.onurdrsn.com.tr/*"
+pattern = "api.nexuserp.onurdrsn.com.tr/*"
 zone_name = "onurdrsn.com.tr"
 
 [observability]

@@ -16,24 +16,34 @@ import type { HandlerResponse } from '../functions/utils/apiResponse';
 
 export type Handler = (event: HandlerEvent, context: HandlerContext) => Promise<HandlerResponse>;
 
-const ALLOWED_ORIGINS = ['https://nexus.onurdrsn.com.tr'];
+const ALLOWED_ORIGINS = [
+	'https://nexuserp.onurdrsn.com.tr',
+	'https://nexus.onurdrsn.com.tr',
+	'http://localhost:5173',
+];
 
-const ROUTE_REGISTRY: Record<string, Handler> = {
-	'/api/auth': authHandler,
-	'/api/products': productsHandler,
-	'/api/stock': stockHandler,
-	'/api/orders': ordersHandler,
-	'/api/customers': customersHandler,
-	'/api/suppliers': suppliersHandler,
-	'/api/users': usersHandler,
-	'/api/roles': rolesHandler,
-	'/api/warehouses': warehousesHandler,
-	'/api/purchase-orders': purchaseOrdersHandler,
-	'/api/audit-logs': auditLogsHandler,
-	'/api/dashboard': dashboardHandler,
-	'/api/ping': pingHandler,
-	'/ping': pingHandler,
+const BASE_ROUTE_HANDLERS: Record<string, Handler> = {
+	auth: authHandler,
+	products: productsHandler,
+	stock: stockHandler,
+	orders: ordersHandler,
+	customers: customersHandler,
+	suppliers: suppliersHandler,
+	users: usersHandler,
+	roles: rolesHandler,
+	warehouses: warehousesHandler,
+	'purchase-orders': purchaseOrdersHandler,
+	'audit-logs': auditLogsHandler,
+	dashboard: dashboardHandler,
+	ping: pingHandler,
 };
+
+const ROUTE_REGISTRY: Record<string, Handler> = Object.fromEntries(
+	Object.entries(BASE_ROUTE_HANDLERS).flatMap(([route, handler]) => [
+		[`/${route}`, handler],
+		[`/api/${route}`, handler],
+	])
+);
 
 function getCorsHeaders(origin: string | null): Record<string, string> {
 	const headers: Record<string, string> = {
