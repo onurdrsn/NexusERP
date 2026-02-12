@@ -4,7 +4,7 @@ import { query } from './utils/db';
 import { requireAuth } from './utils/auth';
 import { apiResponse, apiError, handleOptions } from './utils/apiResponse';
 
-const rolesHandler: Parameters<typeof requireAuth>[0] = async (event, context, user) => {
+const handler: Parameters<typeof requireAuth>[0] = async (event, context, user) => {
     if (event.httpMethod === 'OPTIONS') return handleOptions();
 
     try {
@@ -73,4 +73,4 @@ const rolesHandler: Parameters<typeof requireAuth>[0] = async (event, context, u
     }
 };
 
-export const rolesHandler = requireAuth(rolesHandler);
+export const rolesHandler = requireAuth(handler);

@@ -3,7 +3,7 @@ import { requireAuth } from './utils/auth';
 import { apiResponse, apiError, handleOptions } from './utils/apiResponse';
 import { logAudit, getIp } from './utils/auditLogger';
 
-const warehousesHandler: Parameters<typeof requireAuth>[0] = async (event, context, user) => {
+const handler: Parameters<typeof requireAuth>[0] = async (event, context, user) => {
     if (event.httpMethod === 'OPTIONS') return handleOptions();
 
     try {
@@ -41,4 +41,4 @@ const warehousesHandler: Parameters<typeof requireAuth>[0] = async (event, conte
     }
 };
 
-export const warehousesHandler = requireAuth(warehousesHandler);
+export const warehousesHandler = requireAuth(handler);

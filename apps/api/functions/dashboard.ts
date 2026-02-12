@@ -4,7 +4,7 @@ import { query } from './utils/db';
 import { requireAuth } from './utils/auth';
 import { apiResponse, apiError, handleOptions } from './utils/apiResponse';
 
-const dashboardHandler: Parameters<typeof requireAuth>[0] = async (event, context, user) => {
+const handler: Parameters<typeof requireAuth>[0] = async (event, context, user) => {
     if (event.httpMethod === 'OPTIONS') return handleOptions();
 
     try {
@@ -92,5 +92,5 @@ const dashboardHandler: Parameters<typeof requireAuth>[0] = async (event, contex
     }
 };
 
-export const dashboardHandler = requireAuth(dashboardHandler);
+export const dashboardHandler = requireAuth(handler);
 

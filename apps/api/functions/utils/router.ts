@@ -111,7 +111,3 @@ export class Router {
         return apiError(404, `Route not found: ${method} ${path}`);
     }
 }
-
-        return apiError(404, `Route not found: ${method} ${path}`);
-    }
-}
