@@ -1,34 +1,6 @@
-name = "nexus-erp-api"
-main = "apps/api/src/index.ts"
-compatibility_date = "2025-02-12"
-env = "production"
+name = "nexus-erp"
+compatibility_date = "2026-02-12"
+compatibility_flags = ["nodejs_compat"]
 
-# Environment Variables
-[env.production]
-name = "nexus-erp-api-production"
-routes = [
-  { pattern = "api.example.com/api/*", zone_id = "YOUR_ZONE_ID" }
-]
-
-[env.development]
-name = "nexus-erp-api-dev"
-
-# Database connection (via environment variables)
-# DATABASE_URL=postgres://user:pass@host:5432/dbname
-# JWT_SECRET=your_secret_key
-
-# Triggers
-[triggers]
-crons = []
-
-# KV Namespace bindings (optional, for caching)
-[[kv_namespaces]]
-binding = "CACHE"
-id = "YOUR_KV_NAMESPACE_ID"
-preview_id = "YOUR_PREVIEW_KV_NAMESPACE_ID"
-
-# Durable Objects (optional, for distributed state)
-# [[durable_objects.bindings]]
-# name = "COUNTER"
-# class_name = "Counter"
-# script_name = "nexus-erp-api"
+[pages]
+functions_directory = "apps/api/functions"

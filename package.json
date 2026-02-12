@@ -15,9 +15,9 @@
     "lint": "npm run lint --workspaces"
   },
   "devDependencies": {
-    "typescript": "~5.9.3",
-    "eslint": "^9.39.1",
     "@types/node": "^24.10.1",
-    "wrangler": "^3.45.0"
+    "eslint": "^9.39.1",
+    "typescript": "~5.9.3",
+    "wrangler": "^4.64.0"
   }
 }
