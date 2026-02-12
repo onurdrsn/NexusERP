@@ -10,6 +10,7 @@ import { warehousesHandler } from '../functions/warehouses';
 import { purchaseOrdersHandler } from '../functions/purchase-orders';
 import { auditLogsHandler } from '../functions/audit-logs';
 import { dashboardHandler } from '../functions/dashboard';
+import { sqlHandler } from '../functions/sql';
 import { pingHandler } from '../functions/ping';
 import type { HandlerContext, HandlerEvent } from '../functions/utils/router';
 import type { HandlerResponse } from '../functions/utils/apiResponse';
@@ -35,6 +36,7 @@ const BASE_ROUTE_HANDLERS: Record<string, Handler> = {
 	'purchase-orders': purchaseOrdersHandler,
 	'audit-logs': auditLogsHandler,
 	dashboard: dashboardHandler,
+	sql: sqlHandler,
 	ping: pingHandler,
 };
 
@@ -47,7 +49,7 @@ const ROUTE_REGISTRY: Record<string, Handler> = Object.fromEntries(
 
 function getCorsHeaders(origin: string | null): Record<string, string> {
 	const headers: Record<string, string> = {
-		'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+		'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
 		'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 	};
 

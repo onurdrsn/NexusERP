@@ -5,7 +5,7 @@ import { requireAuth } from './utils/auth';
 import { apiResponse, apiError, handleOptions } from './utils/apiResponse';
 import { logAudit } from './utils/auditLogger';
 
-const sqlHandler: Parameters<typeof requireAuth>[0] = async (event, context, user) => {
+const sqlCoreHandler: Parameters<typeof requireAuth>[0] = async (event, context, user) => {
     if (event.httpMethod === 'OPTIONS') return handleOptions();
     if (event.httpMethod !== 'POST') return apiError(405, 'Method Not Allowed');
 
@@ -40,4 +40,4 @@ const sqlHandler: Parameters<typeof requireAuth>[0] = async (event, context, use
     }
 };
 
-export const sqlHandler = requireAuth(sqlHandler);
+export const sqlHandler = requireAuth(sqlCoreHandler);

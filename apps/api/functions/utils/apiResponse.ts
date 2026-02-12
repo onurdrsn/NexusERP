@@ -47,7 +47,7 @@ export const apiResponse = (statusCode: number, data: any): HandlerResponse => {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': 'https://nexuserp.onurdrsn.com.tr',
             'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
         },
         body: toJson(data, '{"error":"Failed to serialize response"}'),
     };
@@ -71,7 +71,7 @@ export const handleOptions = (): HandlerResponse => {
         headers: {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
         },
         body: '',
     };
