@@ -3,23 +3,17 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "build": "wrangler publish",
     "dev": "wrangler dev",
-    "deploy": "wrangler publish"
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
     "bcryptjs": "^3.0.3",
-    "dotenv": "^17.2.4",
-    "jsonwebtoken": "^9.0.3",
-    "pg": "^8.18.0",
-    "@nexus/core": "*"
+    "jose": "^5.2.0"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^24.10.1",
-    "@types/pg": "^8.16.0",
     "typescript": "~5.9.3",
-    "wrangler": "^3.45.0"
+    "wrangler": "^4.64.0"
   }
 }

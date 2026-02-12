@@ -2,3 +2,10 @@ name = "nexus-erp-api"
 main = "src/index.ts"
 compatibility_date = "2026-02-12"
 compatibility_flags = ["nodejs_compat"]
+
+[vars]
+NODE_ENV = "production"
+
+[[routes]]
+pattern = "api.nexus.onurdrsn.com.tr/*"
+zone_name = "onurdrsn.com.tr"
