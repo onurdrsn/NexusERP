@@ -28,7 +28,7 @@ router.post('/login', async (event) => {
     console.log(`[Auth] Role check for ${user.email}:`, roleResult.rows);
     const roleName = roleResult.rows[0]?.name || 'user';
 
-    const token = signToken({ id: user.id, email: user.email, role: roleName });
+    const token = await signToken({ id: user.id, email: user.email, role: roleName });
 
     const userDto = {
         id: user.id,
@@ -47,7 +47,7 @@ router.post('/change-password', async (event) => {
     if (!authHeader) return apiError(401, 'Missing token');
 
     const token = authHeader.split(' ')[1];
-    const decoded = verifyToken(token);
+    const decoded = await verifyToken(token);
     if (!decoded) return apiError(401, 'Invalid token');
 
     const { new_password } = JSON.parse(event.body || '{}');
@@ -74,7 +74,7 @@ router.get('/me', async (event) => {
     if (!authHeader) return apiError(401, 'Checking Me: Missing token');
 
     const token = authHeader.split(' ')[1];
-    const decoded = verifyToken(token);
+    const decoded = await verifyToken(token);
     if (!decoded) return apiError(401, 'Invalid token');
 
     const result = await query('SELECT id, email, full_name, is_active, requires_password_change FROM users WHERE id = $1', [decoded.id]);

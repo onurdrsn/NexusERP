@@ -1,28 +1,27 @@
-import { Pool } from 'pg';
-import dotenv from 'dotenv';
+import { Pool, type PoolClient } from '@neondatabase/serverless';
 
-dotenv.config();
+let pool: Pool | null = null;
 
-if (!process.env.DATABASE_URL) {
-    console.error('CRITICAL: DATABASE_URL environment variable is not defined!');
-}
+const getPool = (): Pool => {
+    if (pool) return pool;
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false, // Required for many cloud providers like Neon/Supabase
-    },
-});
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+        throw new Error('DATABASE_URL environment variable is not defined');
+    }
+
+    pool = new Pool({ connectionString });
+    return pool;
+};
 
 export const query = async (text: string, params?: any[]) => {
     const start = Date.now();
-    const res = await pool.query(text, params);
+    const res = await getPool().query(text, params);
     const duration = Date.now() - start;
-    //console.log('executed query', { text, duration, rows: res.rowCount });
+    // console.log('executed query', { text, duration, rows: res.rowCount });
     return res;
 };
 
-export const getClient = async () => {
-    const client = await pool.connect();
-    return client;
+export const getClient = async (): Promise<PoolClient> => {
+    return await getPool().connect();
 };

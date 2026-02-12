@@ -1,9 +1,10 @@
-import jwt from 'jsonwebtoken';
+import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
 import bcrypt from 'bcryptjs';
-import { HandlerEvent, HandlerContext, HandlerResponse } from './router';
-import { query } from './db';
+import type { HandlerContext, HandlerEvent } from './router';
+import type { HandlerResponse } from './apiResponse';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+const JWT_SECRET_KEY = new TextEncoder().encode(JWT_SECRET);
 
 export interface AuthUser {
     id: string;
@@ -11,15 +12,32 @@ export interface AuthUser {
     role?: string;
 }
 
-export const signToken = (user: AuthUser) => {
-    return jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, {
-        expiresIn: '8h',
-    });
+export const signToken = async (user: AuthUser): Promise<string> => {
+    return await new SignJWT({ id: user.id, email: user.email, role: user.role })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('8h')
+        .sign(JWT_SECRET_KEY);
 };
 
-export const verifyToken = (token: string): AuthUser | null => {
+const toAuthUser = (payload: JWTPayload): AuthUser | null => {
+    if (!payload.email || !payload.id) return null;
+    if (typeof payload.email !== 'string') return null;
+
+    const role = typeof payload.role === 'string' ? payload.role : undefined;
+    return {
+        id: String(payload.id),
+        email: payload.email,
+        role,
+    };
+};
+
+export const verifyToken = async (token: string): Promise<AuthUser | null> => {
     try {
-        return jwt.verify(token, JWT_SECRET) as AuthUser;
+        const { payload } = await jwtVerify(token, JWT_SECRET_KEY, {
+            algorithms: ['HS256'],
+        });
+        return toAuthUser(payload);
     } catch (error) {
         return null;
     }
@@ -49,7 +67,7 @@ export const requireAuth = (handler: (event: HandlerEvent, context: HandlerConte
         }
 
         const token = authHeader.split(' ')[1];
-        const user = verifyToken(token);
+        const user = await verifyToken(token);
 
         if (!user) {
             return {
