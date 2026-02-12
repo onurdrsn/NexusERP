@@ -94,8 +94,8 @@ function createSuccessResponse(body: string, status: number, responseHeaders: Re
 		status,
 		headers: {
 			'Content-Type': 'application/json',
-			...corsHeaders,
 			...(responseHeaders || {}),
+			...corsHeaders,
 		},
 	});
 }
