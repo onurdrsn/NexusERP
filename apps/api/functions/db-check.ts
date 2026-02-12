@@ -1,7 +1,8 @@
 import { query } from './utils/db';
-import { apiResponse, apiError } from './utils/apiResponse';
+import { apiResponse, apiError, HandlerResponse } from './utils/apiResponse';
+import { HandlerEvent, HandlerContext } from './utils/router';
 
-export const handler = async () => {
+export const dbCheckHandler = async (event: HandlerEvent, context: HandlerContext): Promise<HandlerResponse> => {
     try {
         const res = await query('SELECT NOW()');
         const tables = await query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");

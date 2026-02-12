@@ -41,4 +41,4 @@ const warehousesHandler: Parameters<typeof requireAuth>[0] = async (event, conte
     }
 };
 
-export const handler = requireAuth(warehousesHandler);
+export const warehousesHandler = requireAuth(warehousesHandler);

@@ -151,4 +151,4 @@ router.delete('/:id', async (event, context, params) => {
     }
 });
 
-export const handler = requireAuth(router.handle.bind(router));
+export const productsHandler = requireAuth(router.handle.bind(router));

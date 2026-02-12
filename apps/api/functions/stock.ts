@@ -1,4 +1,5 @@
-import { Handler } from '@netlify/functions';
+import { HandlerResponse } from './utils/apiResponse';
+import { HandlerEvent, HandlerContext } from './utils/router';
 import { query } from './utils/db';
 import { requireAuth } from './utils/auth';
 import { apiResponse, apiError, handleOptions } from './utils/apiResponse';
@@ -124,4 +125,4 @@ router.post('/transfer', async (event, context, params, user) => {
     }
 });
 
-export const handler = requireAuth(router.handle.bind(router));
+export const stockHandler = requireAuth(router.handle.bind(router));

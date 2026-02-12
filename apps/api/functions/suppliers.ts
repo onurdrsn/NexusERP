@@ -43,4 +43,4 @@ const suppliersHandler: Parameters<typeof requireAuth>[0] = async (event, contex
     }
 };
 
-export const handler = requireAuth(suppliersHandler);
+export const suppliersHandler = requireAuth(suppliersHandler);

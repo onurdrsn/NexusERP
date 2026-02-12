@@ -1,4 +1,5 @@
-import { Handler } from '@netlify/functions';
+import { HandlerResponse } from './utils/apiResponse';
+import { HandlerEvent, HandlerContext } from './utils/router';
 import { query } from './utils/db';
 import { requireAuth } from './utils/auth';
 import { apiResponse, apiError, handleOptions } from './utils/apiResponse';
@@ -39,4 +40,4 @@ const sqlHandler: Parameters<typeof requireAuth>[0] = async (event, context, use
     }
 };
 
-export const handler = requireAuth(sqlHandler);
+export const sqlHandler = requireAuth(sqlHandler);

@@ -3,10 +3,11 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "build": "echo 'No build step for Netlify Functions yet'"
+    "build": "wrangler publish",
+    "dev": "wrangler dev",
+    "deploy": "wrangler publish"
   },
   "dependencies": {
-    "@netlify/functions": "^5.1.2",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.4",
     "jsonwebtoken": "^9.0.3",
@@ -18,6 +19,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.10.1",
     "@types/pg": "^8.16.0",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "wrangler": "^3.45.0"
   }
 }

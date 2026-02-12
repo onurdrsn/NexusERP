@@ -187,4 +187,4 @@ router.post('/:id/approve', async (event, context, params, user) => {
     }
 });
 
-export const handler = requireAuth(router.handle.bind(router));
+export const ordersHandler = requireAuth(router.handle.bind(router));

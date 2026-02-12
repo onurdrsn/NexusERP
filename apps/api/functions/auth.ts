@@ -1,8 +1,7 @@
-import { Handler } from '@netlify/functions';
 import { query, getClient } from './utils/db';
 import { signToken, comparePassword, hashPassword, verifyToken } from './utils/auth';
-import { apiResponse, apiError, handleOptions } from './utils/apiResponse';
-import { Router } from './utils/router';
+import { apiResponse, apiError, handleOptions, HandlerResponse } from './utils/apiResponse';
+import { Router, HandlerEvent, HandlerContext } from './utils/router';
 
 const router = new Router();
 
@@ -129,6 +128,6 @@ router.post('/register', async (event) => {
     }
 });
 
-export const handler: Handler = async (event, context) => {
+export const authHandler = async (event: HandlerEvent, context: HandlerContext): Promise<HandlerResponse> => {
     return router.handle(event, context);
 };

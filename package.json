@@ -6,16 +6,18 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "netlify dev",
+    "dev": "npm run dev:web",
     "dev:web": "npm run dev --workspace=@nexus/web",
     "dev:core": "npm run dev --workspace=@nexus/core",
-    "dev:api": "netlify dev --filter @nexus/api",
+    "dev:api": "npm run dev --workspace=@nexus/api",
     "build": "npm run build --workspaces",
+    "deploy:api": "npm run deploy --workspace=@nexus/api",
     "lint": "npm run lint --workspaces"
   },
   "devDependencies": {
     "typescript": "~5.9.3",
     "eslint": "^9.39.1",
-    "@types/node": "^24.10.1"
+    "@types/node": "^24.10.1",
+    "wrangler": "^3.45.0"
   }
 }

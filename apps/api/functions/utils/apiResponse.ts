@@ -1,4 +1,8 @@
-import { HandlerResponse } from '@netlify/functions';
+/**
+ * Cloudflare Workers compatible API response utilities
+ * No longer dependent on Netlify @netlify/functions
+ */
+
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -12,6 +16,12 @@ const log = (msg: string) => {
     }
 };
 
+export interface HandlerResponse {
+    statusCode: number;
+    headers: Record<string, string>;
+    body: string;
+}
+
 export const apiResponse = (statusCode: number, data: any): HandlerResponse => {
     return {
         statusCode,
@@ -19,7 +29,7 @@ export const apiResponse = (statusCode: number, data: any): HandlerResponse => {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*', // Adjust for production
             'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
         },
         body: JSON.stringify(data),
     };
@@ -38,7 +48,7 @@ export const handleOptions = (): HandlerResponse => {
         headers: {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
         },
         body: '',
     };

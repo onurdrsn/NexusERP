@@ -1,6 +1,21 @@
-import { HandlerEvent, HandlerContext } from '@netlify/functions';
-import { apiError, handleOptions } from './apiResponse';
+/**
+ * Cloudflare Workers compatible router
+ * No longer dependent on Netlify types
+ */
+
+import { apiError, handleOptions, HandlerResponse } from './apiResponse';
 import { AuthUser } from './auth';
+
+export interface HandlerEvent {
+    httpMethod: string;
+    path: string;
+    headers: Record<string, string>;
+    body?: string;
+}
+
+export interface HandlerContext {
+    env?: Record<string, any>;
+}
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS';
 
@@ -9,7 +24,7 @@ type RouteHandler = (
     context: HandlerContext,
     params: Record<string, string>,
     user?: AuthUser
-) => Promise<any>;
+) => Promise<HandlerResponse>;
 
 interface Route {
     method: HttpMethod;
@@ -52,31 +67,26 @@ export class Router {
         this.add('DELETE', path, handler);
     }
 
-    async handle(event: HandlerEvent, context: HandlerContext, user?: AuthUser) {
+    patch(path: string, handler: RouteHandler) {
+        this.add('PATCH', path, handler);
+    }
+
+    async handle(event: HandlerEvent, context: HandlerContext, user?: AuthUser): Promise<HandlerResponse> {
         if (event.httpMethod === 'OPTIONS') return handleOptions();
 
         const method = event.httpMethod as HttpMethod;
         let path = event.path;
 
-        // Import log locally to avoid circular dep if needed, or just use console
         console.log(`[Router] ${method} ${path}`);
 
-        // Normalize path: strip /.netlify/functions/<funcName> if present
-        const functionPrefix = '/.netlify/functions/';
-        if (path.startsWith(functionPrefix)) {
-            const parts = path.replace(functionPrefix, '').split('/');
-            // parts[0] is function name (e.g. 'auth'), remainder is path (e.g. 'login')
-            path = '/' + parts.slice(1).join('/');
-        }
-
-        // Also strip /api/<endpoint> prefix for production routing
+        // Normalize path: strip /api/<endpoint> prefix
         // e.g., /api/users -> /
         const apiMatch = path.match(/^\/api\/([^\/]+)(\/.*)?$/);
         if (apiMatch) {
             path = apiMatch[2] || '/';
         }
 
-        console.log(`[Router] ${method} ${path} (original: ${event.path})`);
+        console.log(`[Router] ${method} ${path} (normalized)`);
         this.routes.forEach(r => console.log(`[Router] Checking pattern: ${r.pattern} - Match: ${r.pattern.test(path)}`));
 
         for (const route of this.routes) {
@@ -97,6 +107,10 @@ export class Router {
                 }
             }
         }
+
+        return apiError(404, `Route not found: ${method} ${path}`);
+    }
+}
 
         return apiError(404, `Route not found: ${method} ${path}`);
     }

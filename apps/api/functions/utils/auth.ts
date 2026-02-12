@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { Handler, HandlerEvent, HandlerContext, HandlerResponse } from '@netlify/functions';
+import { HandlerEvent, HandlerContext, HandlerResponse } from './router';
 import { query } from './db';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
@@ -34,13 +34,16 @@ export const comparePassword = async (password: string, hash: string) => {
 };
 
 // Middleware to protect routes
-export const requireAuth = (handler: (event: HandlerEvent, context: HandlerContext, user: AuthUser) => Promise<HandlerResponse>): Handler => {
-    return async (event: HandlerEvent, context: HandlerContext) => {
+export const requireAuth = (handler: (event: HandlerEvent, context: HandlerContext, user: AuthUser) => Promise<HandlerResponse>) => {
+    return async (event: HandlerEvent, context: HandlerContext): Promise<HandlerResponse> => {
         const authHeader = event.headers.authorization || event.headers.Authorization;
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return {
                 statusCode: 401,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({ message: 'Unauthorized: Missing or invalid token' }),
             };
         }
@@ -51,6 +54,9 @@ export const requireAuth = (handler: (event: HandlerEvent, context: HandlerConte
         if (!user) {
             return {
                 statusCode: 401,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({ message: 'Unauthorized: Invalid token' }),
             };
         }

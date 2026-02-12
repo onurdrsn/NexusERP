@@ -25,4 +25,4 @@ router.get('/', async (event) => {
     }
 });
 
-export const handler = requireAuth(router.handle.bind(router));
+export const auditLogsHandler = requireAuth(router.handle.bind(router));

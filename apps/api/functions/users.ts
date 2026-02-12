@@ -166,4 +166,4 @@ router.post('/:id/reset-password', async (event, context, params) => {
     }
 });
 
-export const handler = requireAuth(router.handle.bind(router));
+export const usersHandler = requireAuth(router.handle.bind(router));

@@ -48,4 +48,4 @@ const customersHandler: Parameters<typeof requireAuth>[0] = async (event, contex
     }
 };
 
-export const handler = requireAuth(customersHandler);
+export const customersHandler = requireAuth(customersHandler);

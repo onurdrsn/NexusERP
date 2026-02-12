@@ -10,9 +10,10 @@ This project uses npm workspaces:
 - **`apps/web`**: React + Vite Admin Dashboard.
   - Features: Users, Roles, Inventory, Orders, Audit Logs.
   - Visuals: Data-dense tables, Sidebar navigation, Action Toolbars.
-- **`apps/api`**: Serverless Backend (Netlify Functions).
+- **`apps/api`**: Serverless Backend (Cloudflare Worker Pages).
   - Features: Authentication, Transactional operations (Order -> Stock), Role-based access.
   - Database: PostgreSQL.
+  - Runtime: Cloudflare Workers with TypeScript support.
 - **`packages/core`**: Shared Domain Logic & Types.
   - Contains: Type definitions (`User`, `Order`, `Product`), Pure business rules (Validation, Calculation).
   - Used by both Web and API apps.
@@ -20,7 +21,8 @@ This project uses npm workspaces:
 ## Prerequisites
 - Node.js v18+
 - PostgreSQL Database
-- Netlify CLI (`npm install -g netlify-cli`)
+- Cloudflare CLI (`npm install -g wrangler`)
+- Cloudflare Account with Workers enabled
 
 ## Setup
 
@@ -36,9 +38,20 @@ This project uses npm workspaces:
     DATABASE_URL=postgres://user:pass@host:5432/dbname
     JWT_SECRET=your_super_secret_key
     ```
-    (Note: Netlify Functions pick up env vars from Netlify context or `.env`)
 
-3.  **Run Locally** (Recommended Workflow):
+    For Cloudflare Workers, set environment variables via `wrangler.toml` or Cloudflare Dashboard:
+    ```bash
+    wrangler secret put DATABASE_URL
+    wrangler secret put JWT_SECRET
+    ```
+
+3.  **Configure Cloudflare Worker**:
+    Update `wrangler.toml` with your Cloudflare settings:
+    - Update `name` field to your worker name
+    - Set `routes` with your domain/zone information
+    - Configure `env.production.routes` for production deployment
+
+4.  **Run Locally** (Recommended Workflow):
 
     *   **Terminal 1 (Core Watch)**:
         ```bash
@@ -46,22 +59,94 @@ This project uses npm workspaces:
         # Watches @nexus/core for changes.
         ```
 
-    *   **Terminal 2 (App Server)**:
+    *   **Terminal 2 (API Server)**:
         ```bash
         npm run dev:api
-        # Starts Netlify Dev (API on 8888) AND Frontend (Vite on 5173).
-        # Access the app at: http://localhost:8888
+        # Starts Cloudflare Worker (API on 8787)
         ```
 
-    > **Note:** Do not run `npm run dev:web` separately if `dev:api` is running. Netlify Dev manages the web process for you.
+    *   **Terminal 3 (Frontend)**:
+        ```bash
+        npm run dev:web
+        # Starts Vite dev server (Frontend on 5173)
+        # Configure frontend API endpoint to http://localhost:8787/api
+        ```
 
-## Building
-To build the frontend and core packages:
+## Building & Deployment
+
+**Build for Production**:
 ```bash
 npm run build
 ```
+
+**Deploy to Cloudflare Workers**:
+```bash
+# From apps/api directory
+cd apps/api
+npm run deploy
+# Or from root
+wrangler publish
+```
+
+**Preview Deployment**:
+```bash
+wrangler preview
+```
+
+## Database Migrations
+
+Run SQL migrations from `database/schema.sql`:
+```bash
+psql $DATABASE_URL < database/schema.sql
+```
+
+Seed roles:
+```bash
+psql $DATABASE_URL < database/seed_roles.sql
+```
+
+Create admin user:
+```bash
+node scripts/create-admin-user.ts
+```
+
+## API Routes
+
+All API routes are prefixed with `/api`:
+
+- **Authentication**: `/api/auth/*` (login, register, change-password)
+- **Products**: `/api/products/*`
+- **Stock**: `/api/stock/*`
+- **Orders**: `/api/orders/*` (routes to sales-orders)
+- **Customers**: `/api/customers/*`
+- **Suppliers**: `/api/suppliers/*`
+- **Users**: `/api/users/*` (admin only)
+- **Roles**: `/api/roles/*` (admin only)
+- **Warehouses**: `/api/warehouses/*`
+- **Purchase Orders**: `/api/purchase-orders/*`
+- **Audit Logs**: `/api/audit-logs/*` (admin only)
+- **Dashboard**: `/api/dashboard/*` (admin only)
 
 ## Security
 - **RBAC**: Roles are managed in `apps/api/functions/roles.ts`.
 - **Audit Logs**: Critical actions (Stock adjustments, User modifications) are logged via `audit_logs` table.
 - **Validation**: Business rules (e.g., negative stock prevention) are enforced in `@nexus/core`.
+- **Secrets**: Sensitive environment variables are managed via Cloudflare Secrets Manager.
+
+## Troubleshooting
+
+### Worker Not Starting
+- Ensure `wrangler` is installed: `npm install -g wrangler`
+- Check `wrangler.toml` configuration
+- Verify Node.js version is 18+
+
+### Database Connection Issues
+- Verify `DATABASE_URL` environment variable is set correctly
+- Ensure PostgreSQL server is accessible
+- Check database credentials and connection string format
+
+### Deployment Failed
+- Authenticate with Cloudflare: `wrangler login`
+- Verify account permissions for Workers
+- Check `wrangler.toml` routes configuration
+- Review deployment logs: `wrangler tail`

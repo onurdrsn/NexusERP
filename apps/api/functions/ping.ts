@@ -1,8 +1,12 @@
-import { Handler } from '@netlify/functions';
+import { HandlerResponse } from './utils/apiResponse';
+import { HandlerEvent, HandlerContext } from './utils/router';
 
-export const handler: Handler = async (event, context) => {
+export const pingHandler = async (event: HandlerEvent, context: HandlerContext): Promise<HandlerResponse> => {
     return {
         statusCode: 200,
+        headers: {
+            'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ message: "Pong" }),
     };
 };
