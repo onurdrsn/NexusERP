@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     LineChart, Line
 } from 'recharts';
-import { DollarSign, ShoppingBag, AlertTriangle, TrendingUp } from 'lucide-react';
-import api from '../services/api';
+import { DollarSign, ShoppingBag, AlertTriangle, TrendingUp, type LucideIcon } from 'lucide-react';
+import { dashboardApi } from '../services/endpoints';
 import { useTranslation } from 'react-i18next';
 
 interface DashboardStats {
@@ -27,7 +27,15 @@ interface DashboardData {
     salesHistory: { name: string; sales: number }[];
 }
 
-const StatCard = ({ icon: Icon, label, value, trend, color }: any) => (
+interface StatCardProps {
+    icon: LucideIcon;
+    label: ReactNode;
+    value: ReactNode;
+    trend: ReactNode;
+    color: string;
+}
+
+const StatCard = ({ icon: Icon, label, value, trend, color }: StatCardProps) => (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
         <div className="flex items-center justify-between mb-4">
             <div className={`p-3 rounded-lg ${color}`}>
@@ -51,8 +59,8 @@ export const Dashboard = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await api.get('/dashboard');
-                setData(res.data);
+                const responseData = await dashboardApi.get();
+                setData(responseData);
             } catch (error) {
                 console.error('Failed to fetch dashboard data:', error);
             } finally {

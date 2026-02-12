@@ -5,9 +5,6 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 NODE_ENV = "production"
-DATABASE_URL = "postgresql://neondb_owner:npg_5Y3ekovVmdOx@ep-broad-grass-ae6yq0ai-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-JWT_SECRET = "supersecretkey_change_me_in_production"
-LANG = "tr"
 
 [[routes]]
 pattern = "api.nexuserp.onurdrsn.com.tr/*"

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
-import api from '../services/api';
+import { authApi } from '../services/endpoints';
 
 export const ChangePassword = () => {
     const [newPassword, setNewPassword] = useState('');
@@ -28,7 +28,7 @@ export const ChangePassword = () => {
 
         setLoading(true);
         try {
-            await api.post('/auth/change-password', { new_password: newPassword });
+            await authApi.changePassword(newPassword);
             setRequiresPasswordChange(false);
             navigate('/dashboard');
         } catch (err: any) {

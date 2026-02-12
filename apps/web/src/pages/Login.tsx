@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import { toast } from '../store/useToastStore';
-import api from '../services/api';
+import { authApi } from '../services/endpoints';
 import { Lock, Mail, Loader2 } from 'lucide-react';
 
 export const Login = () => {
@@ -19,7 +19,7 @@ export const Login = () => {
         setError('');
 
         try {
-            const { data } = await api.post('/auth/login', { email, password });
+            const data = await authApi.login(email, password);
             login(data.user, data.token);
             if (data.user.requires_password_change) {
                 navigate('/change-password');

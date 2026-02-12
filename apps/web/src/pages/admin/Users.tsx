@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { DataTable } from '../../components/ui/DataTable';
 import { ActionToolbar } from '../../components/ui/ActionToolbar';
-import api from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { Shield, CheckCircle, XCircle, Edit2, Key, RefreshCw } from 'lucide-react';
 import { PasswordUtils } from '../../utils/PasswordUtils';
 import { Select } from '../../components/ui/Select';
 import { toast } from '../../store/useToastStore';
+import { rolesApi, usersApi } from '../../services/endpoints';
 
 import type { User } from '@nexus/core';
 
@@ -18,7 +18,7 @@ export const Users = () => {
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
-    const [roles, setRoles] = useState<{ id: string, name: string }[]>([]);
+    const [roles, setRoles] = useState<{ id: string | number, name: string }[]>([]);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -32,17 +32,17 @@ export const Users = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [usersRes, rolesRes] = await Promise.all([
-                api.get('/users'),
-                api.get('/roles')
+            const [usersData, rolesData] = await Promise.all([
+                usersApi.list(),
+                rolesApi.list()
             ]);
 
-            if (Array.isArray(usersRes.data)) {
-                setUsers(usersRes.data);
+            if (Array.isArray(usersData)) {
+                setUsers(usersData);
             }
 
-            if (rolesRes.data && Array.isArray(rolesRes.data.roles)) {
-                setRoles(rolesRes.data.roles);
+            if (rolesData && Array.isArray(rolesData.roles)) {
+                setRoles(rolesData.roles);
             }
         } catch (error) {
             console.error('Failed to fetch data', error);
@@ -66,9 +66,9 @@ export const Users = () => {
 
         try {
             if (isEditing && selectedUser) {
-                await api.put(`/users/${selectedUser.id}`, formData);
+                await usersApi.update(selectedUser.id, formData);
             } else {
-                await api.post('/users', formData);
+                await usersApi.create(formData);
             }
             setShowModal(false);
             resetForm();
@@ -158,7 +158,7 @@ export const Users = () => {
                             const temp = prompt(t('users.tempPassword'));
                             if (temp) {
                                 try {
-                                    await api.post(`/users/${user.id}/reset-password`, { temp_password: temp });
+                                    await usersApi.resetPassword(user.id, temp);
                                     toast.success(t('users.resetSuccess'));
                                 } catch (err) {
                                     toast.error(t('users.resetError'));

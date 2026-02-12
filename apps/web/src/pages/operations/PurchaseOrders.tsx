@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { DataTable } from '../../components/ui/DataTable';
 import { ActionToolbar } from '../../components/ui/ActionToolbar';
-import api from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { Package } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '../../store/useToastStore';
+import { productsApi, purchaseOrdersApi, suppliersApi } from '../../services/endpoints';
 
 interface PurchaseOrder {
     id: string;
@@ -45,8 +45,8 @@ export const PurchaseOrders = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/purchase-orders');
-            setOrders(res.data);
+            const responseData = await purchaseOrdersApi.list();
+            setOrders(responseData);
         } catch (error) {
             console.error('Failed to fetch purchase orders', error);
         } finally {
@@ -60,12 +60,12 @@ export const PurchaseOrders = () => {
 
     const openNewOrderModal = async () => {
         try {
-            const [supRes, prodRes] = await Promise.all([
-                api.get('/suppliers'),
-                api.get('/products')
+            const [suppliersData, productsData] = await Promise.all([
+                suppliersApi.list(),
+                productsApi.list()
             ]);
-            setSuppliers(supRes.data);
-            setProducts(prodRes.data);
+            setSuppliers(suppliersData);
+            setProducts(productsData);
             setShowModal(true);
         } catch (err) {
             console.error(err);
@@ -75,7 +75,7 @@ export const PurchaseOrders = () => {
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.post('/purchase-orders', newOrder);
+            await purchaseOrdersApi.create(newOrder);
             toast.success('Purchase order created successfully');
             setShowModal(false);
             setNewOrder({ supplier_id: '', items: [{ product_id: '', quantity: 1, price: 0 }] });
@@ -88,7 +88,7 @@ export const PurchaseOrders = () => {
     const handleReceive = async (po: PurchaseOrder) => {
         if (!confirm('Receive this order? This will increase stock levels.')) return;
         try {
-            await api.post(`/purchase-orders/${po.id}/receive`);
+            await purchaseOrdersApi.receive(po.id);
             toast.success('Stock received successfully');
             fetchData();
         } catch (err: any) {

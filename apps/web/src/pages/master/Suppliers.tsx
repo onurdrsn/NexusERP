@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { DataTable } from '../../components/ui/DataTable';
 import { ActionToolbar } from '../../components/ui/ActionToolbar';
-import api from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { Truck } from 'lucide-react';
 import { toast } from '../../store/useToastStore';
+import { suppliersApi } from '../../services/endpoints';
 
 interface Supplier {
     id: string;
@@ -29,8 +29,8 @@ export const Suppliers = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/suppliers');
-            setSuppliers(res.data);
+            const responseData = await suppliersApi.list();
+            setSuppliers(responseData);
         } catch (error) {
             console.error('Failed to fetch suppliers', error);
         } finally {
@@ -45,7 +45,7 @@ export const Suppliers = () => {
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.post('/suppliers', formData);
+            await suppliersApi.create(formData);
             toast.success('Supplier created successfully');
             setShowModal(false);
             setFormData({ name: '', email: '', phone: '' });

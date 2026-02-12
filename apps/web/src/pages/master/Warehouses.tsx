@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { DataTable } from '../../components/ui/DataTable';
 import { ActionToolbar } from '../../components/ui/ActionToolbar';
-import api from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { Factory } from 'lucide-react';
 import { toast } from '../../store/useToastStore';
+import { warehousesApi } from '../../services/endpoints';
 
 interface Warehouse {
     id: string;
@@ -27,8 +27,8 @@ export const Warehouses = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/warehouses');
-            setWarehouses(res.data);
+            const responseData = await warehousesApi.list();
+            setWarehouses(responseData);
         } catch (error) {
             console.error('Failed to fetch warehouses', error);
         } finally {
@@ -43,7 +43,7 @@ export const Warehouses = () => {
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.post('/warehouses', formData);
+            await warehousesApi.create(formData);
             toast.success('Warehouse created successfully');
             setShowModal(false);
             setFormData({ name: '', location: '' });

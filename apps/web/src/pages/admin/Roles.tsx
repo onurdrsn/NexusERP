@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { DataTable } from '../../components/ui/DataTable';
 import { ActionToolbar } from '../../components/ui/ActionToolbar';
-import api from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { Shield } from 'lucide-react';
 import { toast } from '../../store/useToastStore';
+import { rolesApi } from '../../services/endpoints';
 
 interface Permission {
-    id: number;
+    id: string | number;
     code: string;
     description: string;
 }
 
 interface Role {
-    id: number;
+    id: string | number;
     name: string;
     permissions: string[];
 }
@@ -34,9 +34,9 @@ export const Roles = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/roles');
-            setRoles(res.data.roles);
-            setAllPermissions(res.data.allPermissions);
+            const responseData = await rolesApi.list();
+            setRoles(responseData.roles);
+            setAllPermissions(responseData.allPermissions);
         } catch (error) {
             console.error('Failed to fetch roles', error);
         } finally {
@@ -51,7 +51,7 @@ export const Roles = () => {
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.post('/roles', formData);
+            await rolesApi.create(formData);
             toast.success('Role created successfully');
             setShowModal(false);
             setFormData({ name: '', permissions: [] });

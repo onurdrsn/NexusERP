@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import api from '../services/api';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from '../components/ui/DataTable';
 import { ActionToolbar } from '../components/ui/ActionToolbar';
 import { Check, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '../store/useToastStore';
+import { customersApi, ordersApi, productsApi } from '../services/endpoints';
 
 import type { Order, Customer, Product } from '@nexus/core';
 
@@ -32,9 +32,9 @@ export const Orders = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/orders');
-            setOrders(Array.isArray(res.data) ? res.data : []);
-            if (!Array.isArray(res.data)) console.error('Invalid orders data:', res.data);
+            const responseData = await ordersApi.list();
+            setOrders(Array.isArray(responseData) ? responseData : []);
+            if (!Array.isArray(responseData)) console.error('Invalid orders data:', responseData);
         } catch (error) {
             console.error(error);
         } finally {
@@ -48,12 +48,12 @@ export const Orders = () => {
 
     const openNewOrderModal = async () => {
         try {
-            const [custRes, prodRes] = await Promise.all([
-                api.get('/customers'),
-                api.get('/products')
+            const [customersData, productsData] = await Promise.all([
+                customersApi.list(),
+                productsApi.list()
             ]);
-            setCustomers(custRes.data);
-            setProducts(prodRes.data);
+            setCustomers(customersData);
+            setProducts(productsData);
             setShowModal(true);
         } catch (err) {
             console.error(err);
@@ -63,7 +63,7 @@ export const Orders = () => {
     const handleCreateOrder = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.post('/orders', newOrder);
+            await ordersApi.create(newOrder);
             toast.success(t('salesOrders.orderCreatedSuccessfully'));
             setShowModal(false);
             setNewOrder({ customer_id: '', items: [{ product_id: '', quantity: 1, unit_price: 0 }] });
@@ -76,7 +76,7 @@ export const Orders = () => {
     const handleApprove = async (id: string) => {
         if (!confirm('Approve this order? Stock will be deducted.')) return;
         try {
-            await api.post(`/orders/${id}/approve`);
+            await ordersApi.approve(id);
             toast.success(t('salesOrders.orderApproved'));
             fetchData();
         } catch (err: any) {

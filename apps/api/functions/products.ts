@@ -137,8 +137,8 @@ router.put('/:id', async (event, context, params, user) => {
     }
 });
 
-// DELETE /api/products/:id
-router.delete('/:id', async (event, context, params) => {
+// POST /api/products/:id/delete
+router.post('/:id/delete', async (event, context, params) => {
     try {
         await query('UPDATE products SET is_deleted = true, is_active = false WHERE id = $1', [params.id]);
 

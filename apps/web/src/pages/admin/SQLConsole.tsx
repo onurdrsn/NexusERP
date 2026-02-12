@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react';
-import api from '../../services/api';
 import { ActionToolbar } from '../../components/ui/ActionToolbar';
 import { toast } from '../../store/useToastStore';
 import { Play, Database, Terminal } from 'lucide-react';
+import { sqlApi } from '../../services/endpoints';
 
 export const SQLConsole = () => {
     const [sql, setSql] = useState('');
@@ -23,8 +23,8 @@ export const SQLConsole = () => {
 
         setLoading(true);
         try {
-            const res = await api.post('/sql', { sql: sqlToExecute });
-            setResultSets(Array.isArray(res.data) ? res.data : [res.data]);
+            const responseData = await sqlApi.execute(sqlToExecute);
+            setResultSets(Array.isArray(responseData) ? responseData : [responseData]);
             toast.success(textarea && textarea.selectionStart !== textarea.selectionEnd ? 'Selected query executed' : 'Query executed successfully');
         } catch (error: any) {
             toast.error(error.response?.data?.error || 'Execution failed');

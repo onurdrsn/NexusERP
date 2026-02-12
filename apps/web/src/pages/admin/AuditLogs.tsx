@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { DataTable } from '../../components/ui/DataTable';
 import { ActionToolbar } from '../../components/ui/ActionToolbar';
-import api from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { toast } from '../../store/useToastStore';
 import { User } from 'lucide-react';
 import { format } from 'date-fns';
+import { auditLogsApi } from '../../services/endpoints';
 
 interface AuditLog {
     id: string;
@@ -24,8 +24,8 @@ export const AuditLogs = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/audit-logs');
-            setLogs(res.data);
+            const responseData = await auditLogsApi.list();
+            setLogs(responseData);
         } catch (error) {
             console.error('Failed to fetch audit logs', error);
         } finally {

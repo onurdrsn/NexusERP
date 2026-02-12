@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { DataTable } from '../../components/ui/DataTable';
 import { ActionToolbar } from '../../components/ui/ActionToolbar';
-import api from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { Users } from 'lucide-react';
 import { toast } from '../../store/useToastStore';
+import { customersApi } from '../../services/endpoints';
 
 interface Customer {
     id: string;
@@ -30,8 +30,8 @@ export const Customers = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/customers');
-            setCustomers(res.data);
+            const responseData = await customersApi.list();
+            setCustomers(responseData);
         } catch (error) {
             console.error('Failed to fetch customers', error);
         } finally {
@@ -46,7 +46,7 @@ export const Customers = () => {
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.post('/customers', formData);
+            await customersApi.create(formData);
             toast.success('Customer created successfully');
             setShowModal(false);
             setFormData({ name: '', email: '', phone: '', address: '' });

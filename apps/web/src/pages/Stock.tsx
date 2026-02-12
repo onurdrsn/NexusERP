@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import api from '../services/api';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from '../components/ui/DataTable';
 import { ActionToolbar } from '../components/ui/ActionToolbar';
 import { Package, TrendingUp, TrendingDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '../store/useToastStore';
+import { productsApi, stockApi } from '../services/endpoints';
 
 import type { StockItem, StockMovement, Product } from '@nexus/core';
 
@@ -33,13 +33,13 @@ export const Stock = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [stockRes, moveRes] = await Promise.all([
-                api.get('/stock'),
-                api.get('/stock/movements')
+            const [stockData, movementData] = await Promise.all([
+                stockApi.listCurrent(),
+                stockApi.listMovements()
             ]);
             // Map stock items to include id for DataTable
-            setStockItems(stockRes.data.map((item: any) => ({ ...item, id: item.product_id })));
-            setMovements(moveRes.data);
+            setStockItems(stockData.map((item: any) => ({ ...item, id: item.product_id })));
+            setMovements(movementData);
         } catch (error) {
             console.error(error);
         } finally {
@@ -53,8 +53,8 @@ export const Stock = () => {
 
     const openAdjustmentModal = async () => {
         try {
-            const res = await api.get('/products');
-            setProducts(res.data);
+            const productsData = await productsApi.list();
+            setProducts(productsData);
             setShowModal(true);
         } catch (err) {
             console.error(err);
@@ -64,7 +64,7 @@ export const Stock = () => {
     const handleAdjustment = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.post('/stock/adjust', adjustment);
+            await stockApi.adjust(adjustment);
             toast.success('Stock adjusted successfully');
             setShowModal(false);
             setAdjustment({ product_id: '', type: 'IN', quantity: 1, reason: '' });

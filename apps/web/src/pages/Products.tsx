@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import api from '../services/api';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from '../components/ui/DataTable';
 import { ActionToolbar } from '../components/ui/ActionToolbar';
 import { Select } from '../components/ui/Select';
 import { toast } from '../store/useToastStore';
 import { Package, Trash2, Edit } from 'lucide-react';
+import { productsApi } from '../services/endpoints';
 
 import type { Product } from '@nexus/core';
 
@@ -31,9 +31,9 @@ export const Products = () => {
     const fetchProducts = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/products');
-            setProducts(Array.isArray(res.data) ? res.data : []);
-            if (!Array.isArray(res.data)) console.error('Invalid products data:', res.data);
+            const responseData = await productsApi.list();
+            setProducts(Array.isArray(responseData) ? responseData : []);
+            if (!Array.isArray(responseData)) console.error('Invalid products data:', responseData);
         } catch (error) {
             console.error(error);
         } finally {
@@ -48,7 +48,7 @@ export const Products = () => {
     const handleDelete = async (id: string) => {
         if (confirm(t('common.deleteConfirm') || 'Are you sure you want to delete this product?')) {
             try {
-                await api.delete(`/products/${id}`);
+                await productsApi.remove(id);
                 fetchProducts();
                 toast.success('Product deleted');
             } catch (error) {
@@ -70,9 +70,9 @@ export const Products = () => {
             };
 
             if (isEditing && selectedProduct) {
-                await api.put(`/products/${selectedProduct.id}`, data);
+                await productsApi.update(selectedProduct.id, data);
             } else {
-                await api.post('/products', data);
+                await productsApi.create(data);
             }
 
             setShowModal(false);

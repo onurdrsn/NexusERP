@@ -17,7 +17,7 @@ export interface HandlerContext {
     env?: Record<string, any>;
 }
 
-type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS';
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'OPTIONS';
 
 type RouteHandler = (
     event: HandlerEvent,
@@ -61,10 +61,6 @@ export class Router {
 
     put(path: string, handler: RouteHandler) {
         this.add('PUT', path, handler);
-    }
-
-    delete(path: string, handler: RouteHandler) {
-        this.add('DELETE', path, handler);
     }
 
     patch(path: string, handler: RouteHandler) {

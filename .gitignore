@@ -31,3 +31,4 @@ dist-ssr
 dist/
 build/
 .env.*.local
+.env
