@@ -2,25 +2,36 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from '../components/ui/DataTable';
 import { ActionToolbar } from '../components/ui/ActionToolbar';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { Select } from '../components/ui/Select';
 import { toast } from '../store/useToastStore';
 import { Package, Trash2, Edit } from 'lucide-react';
-import { productsApi } from '../services/endpoints';
+import { productsApi, categoriesApi } from '../services/endpoints';
 
 import type { Product } from '@nexus/core';
 
+interface Category {
+    id: number;
+    name: string;
+}
 
 export const Products = () => {
     const { t } = useTranslation();
     const [products, setProducts] = useState<Product[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [productToDelete, setProductToDelete] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const [formData, setFormData] = useState({
         name: '',
         sku: '',
+        category_id: '',
         price: '0',
         initial_stock: '0',
         min_stock: '0',
@@ -46,15 +57,25 @@ export const Products = () => {
     }, []);
 
     const handleDelete = async (id: string) => {
-        if (confirm(t('common.deleteConfirm') || 'Are you sure you want to delete this product?')) {
-            try {
-                await productsApi.remove(id);
-                fetchProducts();
-                toast.success('Product deleted');
-            } catch (error) {
-                console.error(error);
-                toast.error('Failed to delete product');
-            }
+        setProductToDelete(id);
+        setDeleteConfirmOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!productToDelete) return;
+
+        setIsDeleting(true);
+        try {
+            await productsApi.remove(productToDelete);
+            fetchProducts();
+            toast.success('Product deleted');
+            setDeleteConfirmOpen(false);
+            setProductToDelete(null);
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to delete product');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -86,9 +107,20 @@ export const Products = () => {
     };
 
     const resetForm = () => {
-        setFormData({ name: '', sku: '', price: '0', initial_stock: '0', min_stock: '0', unit: 'pcs', is_active: true });
+        setFormData({ name: '', sku: '', category_id: '', price: '0', initial_stock: '0', min_stock: '0', unit: 'pcs', is_active: true });
         setIsEditing(false);
         setSelectedProduct(null);
+    };
+
+    const openAddModal = async () => {
+        try {
+            const catsData = await categoriesApi.list();
+            setCategories(Array.isArray(catsData) ? catsData : []);
+        } catch (error) {
+            console.error('Failed to load categories', error);
+        }
+        resetForm();
+        setShowModal(true);
     };
 
     const handleEditClick = (product: Product) => {
@@ -96,8 +128,9 @@ export const Products = () => {
         setFormData({
             name: product.name,
             sku: product.sku,
+            category_id: product.category_id ? String(product.category_id) : '',
             price: String(product.price),
-            initial_stock: String(product.stock),
+            initial_stock: '0',
             min_stock: String(product.min_stock),
             unit: product.unit || 'pcs',
             is_active: product.is_active ?? true
@@ -106,11 +139,16 @@ export const Products = () => {
         setShowModal(true);
     };
 
+    const filtered = products.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.sku.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     const columns = [
         {
             key: 'name',
             header: t('common.product') || 'Product',
-            width: '40%',
+            width: '35%',
             render: (p: Product) => (
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-500">
@@ -126,14 +164,14 @@ export const Products = () => {
         {
             key: 'price',
             header: t('common.price') || 'Price',
-            align: 'right' as const,
+            align: 'left' as const,
             width: '20%',
             render: (p: Product) => <span className="font-mono font-medium">${Number(p.price || 0).toFixed(2)}</span>
         },
         {
             key: 'stock',
             header: t('common.stock') || 'Stock',
-            align: 'center' as const,
+            align: 'left' as const,
             width: '20%',
             render: (p: Product) => (
                 <span className={`px-2 py-0.5 rounded-full text-xs font-bold
@@ -145,10 +183,10 @@ export const Products = () => {
         {
             key: 'actions',
             header: t('common.actions') || 'Actions',
-            align: 'right' as const,
+            align: 'left' as const,
             width: '20%',
             render: (p: Product) => (
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-left gap-2">
                     <button
                         onClick={() => handleEditClick(p)}
                         className="text-slate-400 hover:text-indigo-600 p-1"
@@ -170,12 +208,12 @@ export const Products = () => {
         <div className="space-y-6">
             <ActionToolbar
                 title={t('common.products')}
-                onSearch={() => { }}
-                onAdd={() => { resetForm(); setShowModal(true); }}
+                onSearch={(term) => setSearchTerm(term)}
+                onAdd={openAddModal}
             />
 
             <DataTable
-                data={products}
+                data={filtered}
                 columns={columns}
                 isLoading={loading}
             />
@@ -189,7 +227,7 @@ export const Products = () => {
                         </h2>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.name')}</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('products.name')}</label>
                                 <input
                                     className="w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2.5 text-sm"
                                     value={formData.name}
@@ -199,7 +237,7 @@ export const Products = () => {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.sku')}</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t('products.sku')}</label>
                                     <input
                                         className="w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2.5 text-sm"
                                         value={formData.sku}
@@ -207,6 +245,21 @@ export const Products = () => {
                                         required
                                     />
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t('master.categories.name')}</label>
+                                    <select
+                                        className="w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2.5 text-sm"
+                                        value={formData.category_id}
+                                        onChange={e => setFormData({ ...formData, category_id: e.target.value })}
+                                    >
+                                        <option value="">{t('master.categories.noCategory')}</option>
+                                        {categories.map(c => (
+                                            <option key={c.id} value={c.id}>{c.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.price')}</label>
                                     <input
@@ -217,8 +270,7 @@ export const Products = () => {
                                         required
                                     />
                                 </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
+                                {!isEditing && (
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.initialStock')}</label>
                                     <input
@@ -229,6 +281,7 @@ export const Products = () => {
                                         required
                                     />
                                 </div>
+                                )}
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.minStock')}</label>
                                     <input
@@ -269,6 +322,21 @@ export const Products = () => {
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                isOpen={deleteConfirmOpen}
+                title={t('common.delete')}
+                message={t('common.deleteConfirm') || 'Are you sure you want to delete this product?'}
+                confirmText={t('common.delete')}
+                cancelText={t('common.cancel')}
+                variant="danger"
+                isLoading={isDeleting}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => {
+                    setDeleteConfirmOpen(false);
+                    setProductToDelete(null);
+                }}
+            />
         </div>
     );
 };

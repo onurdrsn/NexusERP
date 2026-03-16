@@ -29,6 +29,7 @@ interface Product {
 export const PurchaseOrders = () => {
     const { t } = useTranslation();
     const [orders, setOrders] = useState<PurchaseOrder[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
 
@@ -157,16 +158,21 @@ export const PurchaseOrders = () => {
         }
     ];
 
+    const filtered = orders.filter(o =>
+        o.supplier_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        o.id.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="space-y-6">
             <ActionToolbar
                 title={t('common.purchaseOrders') || 'Purchase Orders'}
-                onSearch={(term) => console.log(term)}
+                onSearch={(term) => setSearchTerm(term)}
                 onAdd={openNewOrderModal}
             />
 
             <DataTable
-                data={orders}
+                data={filtered}
                 columns={columns}
                 isLoading={loading}
             />

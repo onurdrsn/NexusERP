@@ -49,6 +49,24 @@ const handler: Parameters<typeof requireAuth>[0] = async (event, context, user) 
                 return apiError(500, 'Failed to manage warehouses', error);
             }
         },
+        PUT: async () => {
+            const pathParts = getPathParts();
+            const id = pathParts[pathParts.length - 1];
+            if (!id) return apiError(400, 'Warehouse ID is required');
+
+            try {
+                const { name, location } = JSON.parse(event.body || '{}');
+                const result = await query(
+                    'UPDATE warehouses SET name = $1, location = $2 WHERE id = $3 RETURNING *',
+                    [name, location, id]
+                );
+                if (result.rows.length === 0) return apiError(404, 'Warehouse not found');
+                await logAudit(user!.id, 'WAREHOUSE_UPDATED', result.rows[0], getIp(event));
+                return apiResponse(200, result.rows[0]);
+            } catch (error) {
+                return apiError(500, 'Failed to update warehouse', error);
+            }
+        },
     });
 };
 

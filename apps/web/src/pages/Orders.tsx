@@ -2,22 +2,37 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from '../components/ui/DataTable';
 import { ActionToolbar } from '../components/ui/ActionToolbar';
-import { Check, Eye } from 'lucide-react';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { Check, Eye, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '../store/useToastStore';
 import { customersApi, ordersApi, productsApi } from '../services/endpoints';
 
 import type { Order, Customer, Product } from '@nexus/core';
 
-// Ensure OrderStatus matches or cast if needed. 
-// Core has OrderStatus type.
+interface OrderItemWithProduct {
+    product_name?: string;
+    product_id: string;
+    quantity: number;
+    unit_price: number;
+}
 
+type OrderDetail = Order & {
+    items?: OrderItemWithProduct[];
+};
 
 export const Orders = () => {
     const { t } = useTranslation();
     const [orders, setOrders] = useState<Order[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [showDetailModal, setShowDetailModal] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [approveConfirmOpen, setApproveConfirmOpen] = useState(false);
+    const [orderToApprove, setOrderToApprove] = useState<string | null>(null);
+    const [isApproving, setIsApproving] = useState(false);
 
     // Data for form
     const [customers, setCustomers] = useState<Customer[]>([]);
@@ -55,8 +70,8 @@ export const Orders = () => {
             setCustomers(customersData);
             setProducts(productsData);
             setShowModal(true);
-        } catch (err) {
-            console.error(err);
+        } catch (error) {
+            console.error(error);
         }
     };
 
@@ -68,19 +83,45 @@ export const Orders = () => {
             setShowModal(false);
             setNewOrder({ customer_id: '', items: [{ product_id: '', quantity: 1, unit_price: 0 }] });
             fetchData();
-        } catch (err) {
+        } catch (error: unknown) {
+            console.error(error);
             toast.error(t('salesOrders.failedToCreateOrder'));
         }
     };
 
     const handleApprove = async (id: string) => {
-        if (!confirm('Approve this order? Stock will be deducted.')) return;
+        setOrderToApprove(id);
+        setApproveConfirmOpen(true);
+    };
+
+    const handleConfirmApprove = async () => {
+        if (!orderToApprove) return;
+
+        setIsApproving(true);
         try {
-            await ordersApi.approve(id);
+            await ordersApi.approve(orderToApprove);
             toast.success(t('salesOrders.orderApproved'));
             fetchData();
-        } catch (err: any) {
-            toast.error(err.response?.data?.error || t('salesOrders.failedToApproveOrder'));
+            setApproveConfirmOpen(false);
+            setOrderToApprove(null);
+        } catch (error: unknown) {
+            console.error(error);
+            toast.error(t('salesOrders.failedToApproveOrder'));
+        } finally {
+            setIsApproving(false);
+        }
+    };
+
+    const handleViewDetail = async (order: Order) => {
+        setDetailLoading(true);
+        setShowDetailModal(true);
+        try {
+            const data = await ordersApi.getById(order.id);
+            setSelectedOrder(data);
+        } catch {
+            toast.error('Failed to load order details');
+        } finally {
+            setDetailLoading(false);
         }
     };
 
@@ -91,7 +132,7 @@ export const Orders = () => {
         });
     };
 
-    const updateItem = (index: number, field: string, value: any) => {
+    const updateItem = (index: number, field: string, value: string | number) => {
         const newItems = [...newOrder.items];
         newItems[index] = { ...newItems[index], [field]: value };
 
@@ -161,7 +202,7 @@ export const Orders = () => {
                             <Check size={18} />
                         </button>
                     )}
-                    <button className="text-slate-400 hover:text-slate-600">
+                    <button onClick={(e) => { e.stopPropagation(); handleViewDetail(order); }} className="text-slate-400 hover:text-slate-600">
                         <Eye size={18} />
                     </button>
                 </div>
@@ -169,16 +210,21 @@ export const Orders = () => {
         }
     ];
 
+    const filtered = orders.filter(o =>
+        o.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        o.id.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="space-y-6">
             <ActionToolbar
                 title={t('salesOrders.title')}
-                onSearch={() => { }}
+                onSearch={(term) => setSearchTerm(term)}
                 onAdd={openNewOrderModal}
             />
 
             <DataTable
-                data={orders}
+                data={filtered}
                 columns={columns}
                 isLoading={loading}
             />
@@ -257,6 +303,72 @@ export const Orders = () => {
                     </div>
                 </div>
             )}
+
+            {/* Order Detail Modal */}
+            {showDetailModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-xl font-bold">Order Details</h2>
+                            <button onClick={() => setShowDetailModal(false)} className="text-slate-400 hover:text-slate-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        {detailLoading ? (
+                            <div className="flex justify-center py-12">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+                            </div>
+                        ) : selectedOrder ? (
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg">
+                                    <div><p className="text-xs text-slate-500">Order ID</p><p className="font-mono font-medium">#{selectedOrder.id.slice(0,8)}</p></div>
+                                    <div><p className="text-xs text-slate-500">Customer</p><p className="font-medium">{selectedOrder.customer_name}</p></div>
+                                    <div><p className="text-xs text-slate-500">Status</p>
+                                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${getStatusColor(selectedOrder.status)}`}>{selectedOrder.status}</span>
+                                    </div>
+                                    <div><p className="text-xs text-slate-500">Total</p><p className="font-mono font-bold">${Number(selectedOrder.total_amount).toLocaleString()}</p></div>
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-slate-700 mb-3">Items</h3>
+                                    <table className="w-full text-sm">
+                                        <thead><tr className="border-b border-slate-200 text-left text-xs text-slate-500 uppercase">
+                                            <th className="pb-2">Product</th>
+                                            <th className="pb-2 text-center">Qty</th>
+                                            <th className="pb-2 text-right">Unit Price</th>
+                                            <th className="pb-2 text-right">Subtotal</th>
+                                        </tr></thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            {(selectedOrder.items || []).map((item: OrderItemWithProduct, i: number) => (
+                                                <tr key={i} className="py-2">
+                                                    <td className="py-2">{item.product_name || item.product_id}</td>
+                                                    <td className="py-2 text-center">{item.quantity}</td>
+                                                    <td className="py-2 text-right font-mono">${Number(item.unit_price).toFixed(2)}</td>
+                                                    <td className="py-2 text-right font-mono font-medium">${(item.quantity * item.unit_price).toFixed(2)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        ) : null}
+                    </div>
+                </div>
+            )}
+
+            <ConfirmDialog
+                isOpen={approveConfirmOpen}
+                title={t('salesOrders.approve')}
+                message="Approve this order? Stock will be deducted."
+                confirmText={t('salesOrders.approve')}
+                cancelText={t('common.cancel')}
+                variant="warning"
+                isLoading={isApproving}
+                onConfirm={handleConfirmApprove}
+                onCancel={() => {
+                    setApproveConfirmOpen(false);
+                    setOrderToApprove(null);
+                }}
+            />
         </div>
     );
 };

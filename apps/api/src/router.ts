@@ -8,6 +8,8 @@ import { usersHandler } from '../functions/users';
 import { rolesHandler } from '../functions/roles';
 import { warehousesHandler } from '../functions/warehouses';
 import { purchaseOrdersHandler } from '../functions/purchase-orders';
+import { invoicesHandler } from '../functions/invoices';
+import { categoriesHandler } from '../functions/categories';
 import { auditLogsHandler } from '../functions/audit-logs';
 import { dashboardHandler } from '../functions/dashboard';
 import { sqlHandler } from '../functions/sql';
@@ -34,6 +36,8 @@ const BASE_ROUTE_HANDLERS: Record<string, Handler> = {
 	roles: rolesHandler,
 	warehouses: warehousesHandler,
 	'purchase-orders': purchaseOrdersHandler,
+	invoices: invoicesHandler,
+	categories: categoriesHandler,
 	'audit-logs': auditLogsHandler,
 	dashboard: dashboardHandler,
 	sql: sqlHandler,

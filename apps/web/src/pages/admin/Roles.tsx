@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { DataTable } from '../../components/ui/DataTable';
 import { ActionToolbar } from '../../components/ui/ActionToolbar';
 import { useTranslation } from 'react-i18next';
-import { Shield } from 'lucide-react';
+import { Shield, Edit, Trash2 } from 'lucide-react';
 import { toast } from '../../store/useToastStore';
 import { rolesApi } from '../../services/endpoints';
 
@@ -24,6 +24,8 @@ export const Roles = () => {
     const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -48,16 +50,50 @@ export const Roles = () => {
         fetchData();
     }, []);
 
-    const handleCreate = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const resetForm = () => {
+        setFormData({ name: '', permissions: [] });
+        setIsEditing(false);
+        setSelectedRole(null);
+    };
+
+    const handleEdit = (role: Role) => {
+        setSelectedRole(role);
+        setFormData({
+            name: role.name,
+            permissions: [...role.permissions]
+        });
+        setIsEditing(true);
+        setShowModal(true);
+    };
+
+    const handleDelete = async (id: string | number) => {
+        if (!window.confirm('Are you sure you want to delete this role?')) {
+            return;
+        }
         try {
-            await rolesApi.create(formData);
-            toast.success('Role created successfully');
-            setShowModal(false);
-            setFormData({ name: '', permissions: [] });
+            await rolesApi.remove(id);
+            toast.success('Role deleted successfully');
             fetchData();
         } catch (error) {
-            toast.error('Failed to create role');
+            toast.error('Failed to delete role');
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            if (isEditing && selectedRole) {
+                await rolesApi.update(selectedRole.id, formData);
+                toast.success('Role updated successfully');
+            } else {
+                await rolesApi.create(formData);
+                toast.success('Role created successfully');
+            }
+            setShowModal(false);
+            resetForm();
+            fetchData();
+        } catch (error) {
+            toast.error(isEditing ? 'Failed to update role' : 'Failed to create role');
         }
     };
 
@@ -93,6 +129,34 @@ export const Roles = () => {
                     )) : <span className="text-slate-400 text-xs italic">No permissions</span>}
                 </div>
             )
+        },
+        {
+            key: 'actions',
+            header: 'Actions',
+            render: (role: Role) => (
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(role);
+                        }}
+                        className="text-slate-400 hover:text-indigo-600 transition-colors"
+                        title="Edit role"
+                    >
+                        <Edit size={18} />
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(role.id);
+                        }}
+                        className="text-slate-400 hover:text-red-600 transition-colors"
+                        title="Delete role"
+                    >
+                        <Trash2 size={18} />
+                    </button>
+                </div>
+            )
         }
     ];
 
@@ -101,7 +165,10 @@ export const Roles = () => {
             <ActionToolbar
                 title={t('common.roles') || 'Roles & Permissions'}
                 onSearch={(term) => console.log(term)}
-                onAdd={() => setShowModal(true)}
+                onAdd={() => {
+                    resetForm();
+                    setShowModal(true);
+                }}
             />
 
             <DataTable
@@ -110,12 +177,12 @@ export const Roles = () => {
                 isLoading={loading}
             />
 
-            {/* Create Role Modal */}
+            {/* Create/Edit Role Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-                        <h2 className="text-xl font-bold mb-4">Create New Role</h2>
-                        <form onSubmit={handleCreate} className="space-y-6">
+                        <h2 className="text-xl font-bold mb-4">{isEditing ? 'Edit Role' : 'Add New Role'}</h2>
+                        <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
                                 <label className="block text-sm font-medium text-slate-700">Role Name</label>
                                 <input
@@ -160,7 +227,10 @@ export const Roles = () => {
                             <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                                 <button
                                     type="button"
-                                    onClick={() => setShowModal(false)}
+                                    onClick={() => {
+                                        resetForm();
+                                        setShowModal(false);
+                                    }}
                                     className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
                                 >
                                     {t('common.cancel')}

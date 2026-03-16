@@ -3,42 +3,84 @@ import { requireAuth } from './utils/auth';
 import { apiResponse, apiError, handleOptions } from './utils/apiResponse';
 import { Router } from './utils/router';
 import { logAudit, getIp } from './utils/auditLogger';
+import { t } from 'i18next';
 
 const router = new Router();
 
 // GET /api/products
-router.get('/', async (event) => {
+router.get('/', async (event, context) => {
     try {
+        const cache = (context.env?.CACHE as any) || null;
+        const cacheKey = 'products:list';
+
+        // Check cache
+        if (cache) {
+            const cached = await cache.get(cacheKey);
+            if (cached) {
+                console.log('[Products] Cache HIT for list');
+                return apiResponse(200, JSON.parse(cached));
+            }
+        }
+
         const result = await query(`
-            SELECT p.*, 
-                   (SELECT price FROM product_prices WHERE product_id = p.id AND valid_to IS NULL LIMIT 1) as price,
-                   COALESCE((SELECT SUM(stock) FROM stock_current WHERE product_id = p.id), 0) as stock
+            SELECT p.id, p.sku, p.name, p.category_id, p.unit, p.min_stock, p.is_active, p.created_at,
+                   COALESCE(pp.price, 0) as price,
+                   COALESCE((SELECT COALESCE(SUM(quantity), 0) FROM stock_movements WHERE product_id = p.id), 0) as stock
             FROM products p
+            LEFT JOIN product_prices pp ON p.id = pp.product_id AND pp.valid_to IS NULL
             WHERE p.is_deleted = false
             ORDER BY p.created_at DESC
+            LIMIT 500
         `);
+
+        // Cache for 5 minutes
+        if (cache) {
+            await cache.put(cacheKey, JSON.stringify(result.rows || []), { expirationTtl: 300 });
+            console.log('[Products] Cache SET for list');
+        }
+
         return apiResponse(200, result.rows || []);
     } catch (error) {
-        return apiError(500, 'Failed to fetch products', error);
+        return apiError(500, t('products.failedToFetchProducts'), error);
     }
 });
 
 // GET /api/products/:id
 router.get('/:id', async (event, context, params) => {
     try {
+        const cache = (context.env?.CACHE as any) || null;
+        const cacheKey = `products:${params.id}`;
+
+        // Check cache
+        if (cache) {
+            const cached = await cache.get(cacheKey);
+            if (cached) {
+                console.log(`[Products] Cache HIT for ${params.id}`);
+                return apiResponse(200, JSON.parse(cached));
+            }
+        }
+
         const result = await query('SELECT * FROM products WHERE id = $1 AND is_deleted = false', [params.id]);
-        if (result.rows.length === 0) return apiError(404, 'Product not found');
+        if (result.rows.length === 0) return apiError(404, t('products.productNotFound'));
+
+        // Cache for 1 hour
+        if (cache && result.rows.length > 0) {
+            await cache.put(cacheKey, JSON.stringify(result.rows[0]), { expirationTtl: 3600 });
+            console.log(`[Products] Cache SET for ${params.id}`);
+        }
+
         return apiResponse(200, result.rows[0]);
     } catch (error) {
-        return apiError(500, 'Failed to fetch product', error);
+        return apiError(500, t('products.failedToFetchProduct'), error);
     }
 });
 
 // POST /api/products
 router.post('/', async (event, context, params, user) => {
     try {
-        if (!event.body) return apiError(400, 'Missing body');
+        if (!event.body) return apiError(400, t('products.missingBody'));
         const { sku, name, category_id, unit, min_stock, price, initial_stock } = JSON.parse(event.body);
+        const cache = (context.env?.CACHE as any) || null;
 
         const client = await import('./utils/db').then(m => m.getClient());
         try {
@@ -77,6 +119,12 @@ router.post('/', async (event, context, params, user) => {
             // Audit Log
             await logAudit(user!.id, 'PRODUCT_CREATED', { sku, name, price, initial_stock }, getIp(event), client);
 
+            // Invalidate cache
+            if (cache) {
+                await cache.delete('products:list');
+                console.log('[Products] Cache invalidated (list)');
+            }
+
             await client.query('COMMIT');
             return apiResponse(201, { id: productId, message: 'Product created' });
         } catch (err) {
@@ -86,16 +134,17 @@ router.post('/', async (event, context, params, user) => {
             client.release();
         }
     } catch (error) {
-        return apiError(500, 'Failed to create product', error);
+        return apiError(500, t('products.failedToCreateProduct'), error);
     }
 });
 
 // PUT /api/products/:id
 router.put('/:id', async (event, context, params, user) => {
     try {
-        if (!event.body) return apiError(400, 'Missing body');
+        if (!event.body) return apiError(400, t('products.missingBody'));
         const { name, unit, min_stock, price, is_active, initial_stock } = JSON.parse(event.body);
         const id = params.id;
+        const cache = (context.env?.CACHE as any) || null;
 
         const client = await import('./utils/db').then(m => m.getClient());
         try {
@@ -123,8 +172,15 @@ router.put('/:id', async (event, context, params, user) => {
             // Audit Log
             await logAudit(user!.id, 'PRODUCT_UPDATED', { targetId: id, name, price, is_active }, getIp(event), client);
 
+            // Invalidate cache
+            if (cache) {
+                await cache.delete('products:list');
+                await cache.delete(`products:${id}`);
+                console.log(`[Products] Cache invalidated (list + ${id})`);
+            }
+
             await client.query('COMMIT');
-            return apiResponse(200, { message: 'Product updated' });
+            return apiResponse(200, { message: t('products.productUpdated') });
         } catch (err) {
             await client.query('ROLLBACK');
             throw err;
@@ -133,21 +189,31 @@ router.put('/:id', async (event, context, params, user) => {
             client.release();
         }
     } catch (error) {
-        return apiError(500, 'Failed to update product', error);
+        return apiError(500, t('products.failedToUpdateProduct'), error);
     }
 });
 
 // POST /api/products/:id/delete
 router.post('/:id/delete', async (event, context, params) => {
     try {
-        await query('UPDATE products SET is_deleted = true, is_active = false WHERE id = $1', [params.id]);
+        const id = params.id;
+        const cache = (context.env?.CACHE as any) || null;
+
+        await query('UPDATE products SET is_deleted = true, is_active = false WHERE id = $1', [id]);
 
         // Audit Log
-        await logAudit((event as any).user?.id || 'SYSTEM', 'PRODUCT_DELETED', { targetId: params.id }, getIp(event));
+        await logAudit((event as any).user?.id || 'SYSTEM', 'PRODUCT_DELETED', { targetId: id }, getIp(event));
 
-        return apiResponse(200, { message: 'Product deleted' });
+        // Invalidate cache
+        if (cache) {
+            await cache.delete('products:list');
+            await cache.delete(`products:${id}`);
+            console.log(`[Products] Cache invalidated (list + ${id})`);
+        }
+
+        return apiResponse(200, { message: t('products.productDeleted') });
     } catch (error) {
-        return apiError(500, 'Failed to delete product', error);
+        return apiError(500, t('products.failedToDeleteProduct'), error);
     }
 });
 

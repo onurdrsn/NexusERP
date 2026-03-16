@@ -150,10 +150,10 @@ CREATE TABLE invoices (
 -- 7. Audit Logs
 CREATE TABLE audit_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id),
+  user_id TEXT NOT NULL,
   action TEXT NOT NULL,
   entity TEXT NOT NULL,
-  entity_id UUID,
+  entity_id TEXT,
   metadata JSONB,
   created_at TIMESTAMP DEFAULT now()
 );
@@ -161,5 +161,8 @@ CREATE TABLE audit_logs (
 -- Indexes
 CREATE INDEX idx_stock_product_warehouse ON stock_movements(product_id, warehouse_id);
 CREATE INDEX idx_products_sku ON products(sku);
+CREATE INDEX idx_products_status_date ON products(is_deleted, created_at DESC);
+CREATE INDEX idx_product_prices_product_valid ON product_prices(product_id, valid_to);
+CREATE INDEX idx_stock_movements_product ON stock_movements(product_id);
 CREATE INDEX idx_sales_orders_customer ON sales_orders(customer_id);
 CREATE INDEX idx_purchase_orders_supplier ON purchase_orders(supplier_id);

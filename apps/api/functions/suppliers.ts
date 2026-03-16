@@ -49,6 +49,24 @@ const handler: Parameters<typeof requireAuth>[0] = async (event, context, user) 
                 return apiError(500, 'Failed to manage suppliers', error);
             }
         },
+        PUT: async () => {
+            const pathParts = getPathParts();
+            const id = pathParts[pathParts.length - 1];
+            if (!id) return apiError(400, 'Supplier ID is required');
+
+            try {
+                const { name, email, phone } = JSON.parse(event.body || '{}');
+                const result = await query(
+                    'UPDATE suppliers SET name = $1, email = $2, phone = $3 WHERE id = $4 RETURNING *',
+                    [name, email, phone, id]
+                );
+                if (result.rows.length === 0) return apiError(404, 'Supplier not found');
+                await logAudit(user!.id, 'SUPPLIER_UPDATED', result.rows[0], getIp(event));
+                return apiResponse(200, result.rows[0]);
+            } catch (error) {
+                return apiError(500, 'Failed to update supplier', error);
+            }
+        },
     });
 };
 

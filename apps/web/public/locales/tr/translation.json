@@ -99,6 +99,21 @@
         "transfer": "Transfer"
     },
     "master": {
+        "categories": {
+            "title": "Kategoriler",
+            "addNew": "Yeni Kategori Ekle",
+            "name": "Kategori Adı",
+            "parentCategory": "Üst Kategori",
+            "noCategory": "Kategori yok",
+            "createSuccess": "Kategori başarıyla oluşturuldu",
+            "updateSuccess": "Kategori başarıyla güncellendi",
+            "deleteSuccess": "Kategori başarıyla silindi",
+            "createError": "Kategori oluşturulamadı",
+            "updateError": "Kategori güncellenemedi",
+            "deleteError": "Kategori silinemedi",
+            "deleteConfirm": "Bu kategoriyi silmek istediğinize emin misiniz?",
+            "hasProducts": "Atanmış ürünleri olan kategori silinemez"
+        },
         "warehouses": {
             "title": "Depolar",
             "addNew": "Yeni Depo Ekle",
@@ -150,5 +165,50 @@
         "orderStatus": "Sipariş Durumu",
         "orderTotal": "Sipariş Toplamı",
         "orderItems": "Sipariş Ürünleri"
+    },
+    "invoices": {
+        "title": "Faturalar",
+        "invoiceId": "Fatura No",
+        "customer": "Müşteri",
+        "totalAmount": "Toplam Tutar",
+        "taxAmount": "KDV",
+        "status": "Durum",
+        "issuedDate": "Düzenlenme Tarihi",
+        "create": "Fatura Oluştur",
+        "selectOrder": "Onaylı Siparişi Seç",
+        "issue": "Faturayı Düzenle",
+        "pay": "Ödendi İşaretle",
+        "invoiceCreatedSuccessfully": "Fatura başarıyla oluşturuldu",
+        "failedToCreateInvoice": "Fatura oluşturulamadı",
+        "invoiceIssued": "Fatura düzenlendi",
+        "failedToIssueInvoice": "Fatura düzenlenemedi",
+        "invoicePaid": "Fatura ödendi olarak işaretlendi",
+        "failedToPayInvoice": "Fatura ödeme işlemi başarısız oldu"
+    },
+    "products": {
+        "title": "Ürünler",
+        "addNew": "Yeni Ürün Ekle",
+        "name": "Ürün Adı",
+        "price": "Fiyat",
+        "initialStock": "Başlangıç Stoğu",
+        "minStock": "Min. Stok",
+        "sku": "SKU",
+        "category": "Kategori",
+        "createSuccess": "Ürün başarıyla oluşturuldu",
+        "updateSuccess": "Ürün başarıyla güncellendi",
+        "deleteSuccess": "Ürün başarıyla silindi",
+        "createError": "Ürün oluşturulamadı",
+        "updateError": "Ürün güncellenemedi",
+        "deleteError": "Ürün silinemedi",
+        "deleteConfirm": "Bu ürünü silmek istediğinize emin misiniz?",
+        "failedToFetchProducts": "Ürünler getirilemedi",
+        "noProductsFound": "Ürün bulunamadı",
+        "missingBody": "Eksik istek gövdesi",
+        "invalidPrice": "Geçersiz fiyat değeri",
+        "invalidStock": "Geçersiz stok değeri",
+        "invalidMinStock": "Geçersiz minimum stok değeri",
+        "failedToCreateProduct": "Ürün oluşturulamadı",
+        "failedToUpdateProduct": "Ürün güncellenemedi",
+        "failedToDeleteProduct": "Ürün silinemedi"
     }
 }

@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { useAuthStore } from './store/useAuthStore';
-import { Login, ChangePassword, Dashboard, Products, Orders, Stock, Users, Roles, Suppliers, PurchaseOrders, Customers, Warehouses, AuditLogs, SQLConsole } from './pages';
+import { Login, ChangePassword, Dashboard, Products, Orders, Invoices, Stock, Users, Roles, Suppliers, Categories, PurchaseOrders, Customers, Warehouses, AuditLogs, SQLConsole } from './pages';
 
 const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
   const user = useAuthStore((state) => state.user);
@@ -44,7 +44,9 @@ function App() {
           <Route path="master/customers" element={<Customers />} />
           <Route path="master/warehouses" element={<Warehouses />} />
           <Route path="master/products" element={<Products />} />
+          <Route path="master/categories" element={<Categories />} />
           <Route path="operations/purchase-orders" element={<PurchaseOrders />} />
+          <Route path="operations/invoices" element={<Invoices />} />
           <Route path="operations/sales-orders" element={<Orders />} />
           <Route path="operations/stock-movements" element={<Stock />} />
         </Route>

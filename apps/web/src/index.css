@@ -6,6 +6,36 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
+/* Custom scrollbar */
+.custom-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+    background: #e2e8f0; /* slate-200 */
+    border-radius: 9999px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8; /* slate-400 */
+}
+
+/* Sidebar için koyu tema scroll */
+.custom-scroll-dark::-webkit-scrollbar {
+    width: 4px;
+}
+.custom-scroll-dark::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scroll-dark::-webkit-scrollbar-thumb {
+    background: #334155; /* slate-700 */
+    border-radius: 9999px;
+}
+.custom-scroll-dark::-webkit-scrollbar-thumb:hover {
+    background: #475569; /* slate-600 */
+}
+
 @layer utilities {
   @keyframes toast-progress {
     from {

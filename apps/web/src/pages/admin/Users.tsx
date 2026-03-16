@@ -14,6 +14,7 @@ import type { User } from '@nexus/core';
 export const Users = () => {
     const { t } = useTranslation();
     const [users, setUsers] = useState<User[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -175,17 +176,22 @@ export const Users = () => {
         }
     ];
 
+    const filtered = users.filter(u =>
+        u.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="space-y-6">
             <ActionToolbar
                 title={t('users.title')}
-                onSearch={(term) => console.log(term)}
+                onSearch={(term) => setSearchTerm(term)}
                 onAdd={() => { resetForm(); setShowModal(true); }}
                 onExport={() => toast.success('Exporting...')}
             />
 
             <DataTable
-                data={users}
+                data={filtered}
                 columns={columns}
                 isLoading={loading}
                 pagination={{

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { DataTable } from '../../components/ui/DataTable';
 import { ActionToolbar } from '../../components/ui/ActionToolbar';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useTranslation } from 'react-i18next';
-import { Users } from 'lucide-react';
+import { Users, Edit, Trash2 } from 'lucide-react';
 import { toast } from '../../store/useToastStore';
 import { customersApi } from '../../services/endpoints';
 
@@ -17,8 +18,14 @@ interface Customer {
 export const Customers = () => {
     const { t } = useTranslation();
     const [customers, setCustomers] = useState<Customer[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -43,17 +50,62 @@ export const Customers = () => {
         fetchData();
     }, []);
 
-    const handleCreate = async (e: React.FormEvent) => {
+    const handleEdit = (customer: Customer) => {
+        setSelectedCustomer(customer);
+        setFormData({
+            name: customer.name,
+            email: customer.email,
+            phone: customer.phone || '',
+            address: customer.address || ''
+        });
+        setIsEditing(true);
+        setShowModal(true);
+    };
+
+    const handleDelete = async (id: string) => {
+        setCustomerToDelete(id);
+        setDeleteConfirmOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!customerToDelete) return;
+
+        setIsDeleting(true);
+        try {
+            await customersApi.remove(customerToDelete);
+            toast.success('Customer deleted');
+            fetchData();
+            setDeleteConfirmOpen(false);
+            setCustomerToDelete(null);
+        } catch {
+            toast.error('Failed to delete customer');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await customersApi.create(formData);
-            toast.success('Customer created successfully');
+            if (isEditing && selectedCustomer) {
+                await customersApi.update(selectedCustomer.id, formData);
+                toast.success('Customer updated');
+            } else {
+                await customersApi.create(formData);
+                toast.success('Customer created successfully');
+            }
             setShowModal(false);
-            setFormData({ name: '', email: '', phone: '', address: '' });
+            resetForm();
             fetchData();
-        } catch (error) {
-            toast.error('Failed to create customer');
+        } catch {
+            toast.error(isEditing ? 'Failed to update customer' : 'Failed to create customer');
         }
+    };
+
+    const resetForm = () => {
+        setFormData({ name: '', email: '', phone: '', address: '' });
+        setIsEditing(false);
+        setSelectedCustomer(null);
     };
 
     const columns = [
@@ -72,18 +124,39 @@ export const Customers = () => {
         { key: 'email', header: t('master.customers.email'), render: (c: Customer) => c.email || '-' },
         { key: 'phone', header: t('master.customers.phone'), render: (c: Customer) => c.phone || '-' },
         { key: 'address', header: t('master.customers.address'), render: (c: Customer) => <span className="truncate max-w-xs block" title={c.address}>{c.address || '-'}</span> },
+        {
+            key: 'actions',
+            header: t('common.actions'),
+            align: 'right' as const,
+            render: (c: Customer) => (
+                <div className="flex justify-end gap-2">
+                    <button onClick={() => handleEdit(c)} className="text-slate-400 hover:text-indigo-600 p-1">
+                        <Edit size={16} />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); handleDelete(c.id); }} className="text-slate-400 hover:text-red-600 p-1">
+                        <Trash2 size={16} />
+                    </button>
+                </div>
+            )
+        }
     ];
+
+    const filtered = customers.filter(c =>
+        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (c.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (c.phone || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
         <div className="space-y-6">
             <ActionToolbar
                 title={t('common.customers') || 'Customers'}
-                onSearch={(term) => console.log(term)}
-                onAdd={() => setShowModal(true)}
+                onSearch={(term) => setSearchTerm(term)}
+                onAdd={() => { resetForm(); setShowModal(true); }}
             />
 
             <DataTable
-                data={customers}
+                data={filtered}
                 columns={columns}
                 isLoading={loading}
             />
@@ -91,8 +164,8 @@ export const Customers = () => {
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-                        <h2 className="text-xl font-bold mb-4">{t('master.customers.addNew')}</h2>
-                        <form onSubmit={handleCreate} className="space-y-4">
+                        <h2 className="text-xl font-bold mb-4">{isEditing ? 'Edit Customer' : t('master.customers.addNew')}</h2>
+                        <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-slate-700">{t('master.customers.name')}</label>
                                 <input
@@ -136,7 +209,7 @@ export const Customers = () => {
                             <div className="flex justify-end gap-3 mt-6">
                                 <button
                                     type="button"
-                                    onClick={() => setShowModal(false)}
+                                    onClick={() => { setShowModal(false); resetForm(); }}
                                     className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
                                 >
                                     {t('common.cancel')}
@@ -152,6 +225,21 @@ export const Customers = () => {
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                isOpen={deleteConfirmOpen}
+                title={t('common.delete')}
+                message={t('common.deleteConfirm') || 'Are you sure?'}
+                confirmText={t('common.delete')}
+                cancelText={t('common.cancel')}
+                variant="danger"
+                isLoading={isDeleting}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => {
+                    setDeleteConfirmOpen(false);
+                    setCustomerToDelete(null);
+                }}
+            />
         </div>
     );
 };

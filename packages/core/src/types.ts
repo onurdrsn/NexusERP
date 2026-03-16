@@ -30,6 +30,7 @@ export interface Product {
     sku: string;
     price: number;
     stock: number;
+    category_id?: number;
     initial_stock?: number;
     min_stock?: number;
     unit?: string;

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { DataTable } from '../../components/ui/DataTable';
 import { ActionToolbar } from '../../components/ui/ActionToolbar';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useTranslation } from 'react-i18next';
-import { Factory } from 'lucide-react';
+import { Factory, Edit, Trash2 } from 'lucide-react';
 import { toast } from '../../store/useToastStore';
 import { warehousesApi } from '../../services/endpoints';
 
@@ -16,8 +17,14 @@ interface Warehouse {
 export const Warehouses = () => {
     const { t } = useTranslation();
     const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(null);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [warehouseToDelete, setWarehouseToDelete] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -40,17 +47,60 @@ export const Warehouses = () => {
         fetchData();
     }, []);
 
-    const handleCreate = async (e: React.FormEvent) => {
+    const handleEdit = (warehouse: Warehouse) => {
+        setSelectedWarehouse(warehouse);
+        setFormData({
+            name: warehouse.name,
+            location: warehouse.location || ''
+        });
+        setIsEditing(true);
+        setShowModal(true);
+    };
+
+    const handleDelete = async (id: string) => {
+        setWarehouseToDelete(id);
+        setDeleteConfirmOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!warehouseToDelete) return;
+
+        setIsDeleting(true);
+        try {
+            await warehousesApi.remove(warehouseToDelete);
+            toast.success(t('common.delete'));
+            fetchData();
+            setDeleteConfirmOpen(false);
+            setWarehouseToDelete(null);
+        } catch {
+            toast.error('Failed to delete warehouse');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await warehousesApi.create(formData);
-            toast.success('Warehouse created successfully');
+            if (isEditing && selectedWarehouse) {
+                await warehousesApi.update(selectedWarehouse.id, formData);
+                toast.success('Warehouse updated');
+            } else {
+                await warehousesApi.create(formData);
+                toast.success('Warehouse created successfully');
+            }
             setShowModal(false);
-            setFormData({ name: '', location: '' });
+            resetForm();
             fetchData();
-        } catch (error) {
-            toast.error('Failed to create warehouse');
+        } catch {
+            toast.error(isEditing ? 'Failed to update warehouse' : 'Failed to create warehouse');
         }
+    };
+
+    const resetForm = () => {
+        setFormData({ name: '', location: '' });
+        setIsEditing(false);
+        setSelectedWarehouse(null);
     };
 
     const columns = [
@@ -67,18 +117,36 @@ export const Warehouses = () => {
             )
         },
         { key: 'location', header: t('master.warehouses.location'), render: (w: Warehouse) => w.location || '-' },
+        {
+            key: 'actions',
+            header: t('common.actions'),
+            align: 'right' as const,
+            render: (w: Warehouse) => (
+                <div className="flex justify-end gap-2">
+                    <button onClick={() => handleEdit(w)} className="text-slate-400 hover:text-indigo-600 p-1">
+                        <Edit size={16} />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); handleDelete(w.id); }} className="text-slate-400 hover:text-red-600 p-1">
+                        <Trash2 size={16} />
+                    </button>
+                </div>
+            )
+        }
     ];
-
+    const filtered = warehouses.filter(w =>
+        w.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (w.location || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
     return (
         <div className="space-y-6">
             <ActionToolbar
                 title={t('common.warehouses') || 'Warehouses'}
-                onSearch={(term) => console.log(term)}
-                onAdd={() => setShowModal(true)}
+                onSearch={(term) => setSearchTerm(term)}
+                onAdd={() => { resetForm(); setShowModal(true); }}
             />
 
             <DataTable
-                data={warehouses}
+                data={filtered}
                 columns={columns}
                 isLoading={loading}
             />
@@ -86,8 +154,8 @@ export const Warehouses = () => {
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-                        <h2 className="text-xl font-bold mb-4">{t('master.warehouses.addNew')}</h2>
-                        <form onSubmit={handleCreate} className="space-y-4">
+                        <h2 className="text-xl font-bold mb-4">{isEditing ? 'Edit Warehouse' : t('master.warehouses.addNew')}</h2>
+                        <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-slate-700">{t('master.warehouses.name')}</label>
                                 <input
@@ -111,7 +179,7 @@ export const Warehouses = () => {
                             <div className="flex justify-end gap-3 mt-6">
                                 <button
                                     type="button"
-                                    onClick={() => setShowModal(false)}
+                                    onClick={() => { setShowModal(false); resetForm(); }}
                                     className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
                                 >
                                     {t('common.cancel')}
@@ -127,6 +195,21 @@ export const Warehouses = () => {
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                isOpen={deleteConfirmOpen}
+                title={t('common.delete')}
+                message={t('common.deleteConfirm') || 'Are you sure?'}
+                confirmText={t('common.delete')}
+                cancelText={t('common.cancel')}
+                variant="danger"
+                isLoading={isDeleting}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => {
+                    setDeleteConfirmOpen(false);
+                    setWarehouseToDelete(null);
+                }}
+            />
         </div>
     );
 };

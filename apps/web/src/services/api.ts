@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.nexuserp.onurdrsn.com.tr';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787';
+// 'https://api.nexuserp.onurdrsn.com.tr';
 
 const api = axios.create({
     baseURL: API_BASE_URL,

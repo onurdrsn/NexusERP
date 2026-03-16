@@ -53,11 +53,7 @@ export function DataTable<T extends { id: string | number }>({
                                         width: col.width || 'auto'
                                     }}
                                 >
-                                    <div className="flex items-center gap-1 cursor-pointer hover:text-slate-900">
-                                        {col.header}
-                                        {/* Placeholder for sort icon, could be dynamic */}
-                                        {/* <ArrowUpDown size={12} className="text-slate-400" /> */}
-                                    </div>
+                                    {col.header}
                                 </th>
                             ))}
                         </tr>
@@ -85,8 +81,7 @@ export function DataTable<T extends { id: string | number }>({
                                                 width: col.width || 'auto'
                                             }}
                                         >
-                                            {col.render ? col.render(item) : (item as any)[col.key]}
-                                        </td>
+                                            {col.render ? col.render(item) : String(item[col.key as keyof T] ?? '')}                                        </td>
                                     ))}
                                 </tr>
                             ))

@@ -19,6 +19,7 @@ interface AuditLog {
 export const AuditLogs = () => {
     const { t } = useTranslation();
     const [logs, setLogs] = useState<AuditLog[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
 
     const fetchData = async () => {
@@ -108,16 +109,21 @@ export const AuditLogs = () => {
         }
     ];
 
+    const filtered = logs.filter(l =>
+        l.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (l.user_email || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="space-y-6">
             <ActionToolbar
                 title={t('common.auditLogs') || 'Audit Logs'}
-                onSearch={(term) => console.log(term)}
+                onSearch={(term) => setSearchTerm(term)}
                 onExport={handleExport}
             />
 
             <DataTable
-                data={logs}
+                data={filtered}
                 columns={columns}
                 isLoading={loading}
             />

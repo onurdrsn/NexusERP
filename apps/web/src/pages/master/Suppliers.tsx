@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { DataTable } from '../../components/ui/DataTable';
 import { ActionToolbar } from '../../components/ui/ActionToolbar';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useTranslation } from 'react-i18next';
-import { Truck } from 'lucide-react';
+import { Truck, Edit, Trash2 } from 'lucide-react';
 import { toast } from '../../store/useToastStore';
 import { suppliersApi } from '../../services/endpoints';
 
@@ -16,8 +17,14 @@ interface Supplier {
 export const Suppliers = () => {
     const { t } = useTranslation();
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [supplierToDelete, setSupplierToDelete] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -42,17 +49,61 @@ export const Suppliers = () => {
         fetchData();
     }, []);
 
-    const handleCreate = async (e: React.FormEvent) => {
+    const handleEdit = (supplier: Supplier) => {
+        setSelectedSupplier(supplier);
+        setFormData({
+            name: supplier.name,
+            email: supplier.email || '',
+            phone: supplier.phone || ''
+        });
+        setIsEditing(true);
+        setShowModal(true);
+    };
+
+    const handleDelete = async (id: string) => {
+        setSupplierToDelete(id);
+        setDeleteConfirmOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!supplierToDelete) return;
+
+        setIsDeleting(true);
+        try {
+            await suppliersApi.remove(supplierToDelete);
+            toast.success('Supplier deleted');
+            fetchData();
+            setDeleteConfirmOpen(false);
+            setSupplierToDelete(null);
+        } catch {
+            toast.error('Failed to delete supplier');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await suppliersApi.create(formData);
-            toast.success('Supplier created successfully');
+            if (isEditing && selectedSupplier) {
+                await suppliersApi.update(selectedSupplier.id, formData);
+                toast.success('Supplier updated');
+            } else {
+                await suppliersApi.create(formData);
+                toast.success('Supplier created successfully');
+            }
             setShowModal(false);
-            setFormData({ name: '', email: '', phone: '' });
+            resetForm();
             fetchData();
-        } catch (error) {
-            toast.error('Failed to create supplier');
+        } catch {
+            toast.error(isEditing ? 'Failed to update supplier' : 'Failed to create supplier');
         }
+    };
+
+    const resetForm = () => {
+        setFormData({ name: '', email: '', phone: '' });
+        setIsEditing(false);
+        setSelectedSupplier(null);
     };
 
     const columns = [
@@ -70,18 +121,38 @@ export const Suppliers = () => {
         },
         { key: 'email', header: t('master.suppliers.email'), render: (s: Supplier) => s.email || '-' },
         { key: 'phone', header: t('master.suppliers.phone'), render: (s: Supplier) => s.phone || '-' },
+        {
+            key: 'actions',
+            header: t('common.actions'),
+            align: 'right' as const,
+            render: (s: Supplier) => (
+                <div className="flex justify-end gap-2">
+                    <button onClick={() => handleEdit(s)} className="text-slate-400 hover:text-indigo-600 p-1">
+                        <Edit size={16} />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); handleDelete(s.id); }} className="text-slate-400 hover:text-red-600 p-1">
+                        <Trash2 size={16} />
+                    </button>
+                </div>
+            )
+        }
     ];
+
+    const filtered = suppliers.filter(s =>
+        s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (s.email || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
         <div className="space-y-6">
             <ActionToolbar
                 title={t('common.suppliers') || 'Suppliers'}
-                onSearch={(term) => console.log(term)}
-                onAdd={() => setShowModal(true)}
+                onSearch={(term) => setSearchTerm(term)}
+                onAdd={() => { resetForm(); setShowModal(true); }}
             />
 
             <DataTable
-                data={suppliers}
+                data={filtered}
                 columns={columns}
                 isLoading={loading}
             />
@@ -89,8 +160,8 @@ export const Suppliers = () => {
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-                        <h2 className="text-xl font-bold mb-4">{t('master.suppliers.addNew')}</h2>
-                        <form onSubmit={handleCreate} className="space-y-4">
+                        <h2 className="text-xl font-bold mb-4">{isEditing ? 'Edit Supplier' : t('master.suppliers.addNew')}</h2>
+                        <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-slate-700">{t('master.suppliers.name')}</label>
                                 <input
@@ -123,7 +194,7 @@ export const Suppliers = () => {
                             <div className="flex justify-end gap-3 mt-6">
                                 <button
                                     type="button"
-                                    onClick={() => setShowModal(false)}
+                                    onClick={() => { setShowModal(false); resetForm(); }}
                                     className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
                                 >
                                     {t('common.cancel')}
@@ -139,6 +210,21 @@ export const Suppliers = () => {
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                isOpen={deleteConfirmOpen}
+                title={t('common.delete')}
+                message={t('common.deleteConfirm') || 'Are you sure?'}
+                confirmText={t('common.delete')}
+                cancelText={t('common.cancel')}
+                variant="danger"
+                isLoading={isDeleting}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => {
+                    setDeleteConfirmOpen(false);
+                    setSupplierToDelete(null);
+                }}
+            />
         </div>
     );
 };

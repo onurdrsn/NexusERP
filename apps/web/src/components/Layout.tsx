@@ -12,12 +12,15 @@ import { useTranslation } from 'react-i18next';
 import { ToastContainer } from './ui/Toast';
 
 interface NavItemProps {
-    icon: any;
+    icon: React.ComponentType<{ size?: number }>;
     label: string;
     to?: string;
-    children?: { label: string; to: string; icon?: any }[];
+    children?: { 
+        label: string; 
+        to: string; 
+        icon?: React.ComponentType<{ size?: number }>;
+    }[];
 }
-
 const NavItem = ({ icon: Icon, label, to, children }: NavItemProps) => {
     const location = useLocation();
     const [isOpen, setIsOpen] = useState(true); // Default open for ERP
@@ -98,7 +101,7 @@ export const Layout = () => {
                     <p className="text-xs text-slate-500 mt-1 ml-10">Enterprise Edition</p>
                 </div>
 
-                <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto">
+                <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto custom-scroll-dark">
                     {/* Dashboard */}
                     <div>
                         <p className="px-3 text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">General</p>
@@ -128,6 +131,7 @@ export const Layout = () => {
                             label={t('common.masterData')}
                             children={[
                                 { label: t('common.products'), to: '/master/products' },
+                                { label: t('common.categories') || 'Categories', to: '/master/categories' },
                                 { label: t('common.warehouses'), to: '/master/warehouses' },
                                 { label: t('common.suppliers'), to: '/master/suppliers' },
                                 { label: t('common.customers'), to: '/master/customers' },
@@ -145,6 +149,7 @@ export const Layout = () => {
                                 { label: t('common.purchaseOrders'), to: '/operations/purchase-orders' },
                                 { label: t('common.stockMovements'), to: '/operations/stock-movements' },
                                 { label: t('common.salesOrders'), to: '/operations/sales-orders' },
+                                { label: t('invoices.title') || 'Invoices', to: '/operations/invoices' },
                             ]}
                         />
                     </div>
@@ -175,9 +180,9 @@ export const Layout = () => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-auto bg-slate-50 relative">
+                <main className="flex-1 flex flex-col min-h-0 bg-slate-50">
                 {/* Top Bar (Optional if needed, but sidebar covers most) */}
-                <div className="sticky top-0 z-20 bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm">
+                <div className="shrink-0 z-20 bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                         <span>NexusERP</span>
                         <ChevronRight size={14} />
@@ -190,8 +195,10 @@ export const Layout = () => {
                     </div>
                 </div>
 
-                <div className="p-6 max-w-[1600px] mx-auto pb-20">
-                    <Outlet />
+                <div className="flex-1 overflow-auto custom-scroll">
+                    <div className="p-6 max-w-[1600px] mx-auto pb-20">
+                        <Outlet />
+                    </div>
                 </div>
             </main>
         </div>

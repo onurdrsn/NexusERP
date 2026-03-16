@@ -15,7 +15,7 @@ export const getIp = (event: any): string => {
  * @param client - Optional database client for use within transactions.
  */
 export const logAudit = async (
-    userId: string,
+    userId: string | number,
     action: string,
     details: any,
     ip: string = '0.0.0.0',
@@ -24,14 +24,15 @@ export const logAudit = async (
     const q = client ? client.query.bind(client) : query;
     try {
         const entity = details.entity || action.split('_')[0];
-        const entity_id = details.targetId || details.id || null;
+        const entity_id = (details.targetId || details.id || null)?.toString();
 
         await q(
-            `INSERT INTO audit_logs (user_id, action, entity, entity_id, metadata, ip_address) 
-             VALUES ($1, $2, $3, $4, $5, $6)`,
-            [userId, action, entity, entity_id, JSON.stringify(details), ip]
+            `INSERT INTO audit_logs (user_id, action, entity, entity_id, metadata) 
+             VALUES ($1, $2, $3, $4, $5)`,
+            [userId?.toString(), action, entity, entity_id, JSON.stringify(details)]
         );
     } catch (error) {
         console.error('Audit Log Error:', error);
     }
-};
+}
+;

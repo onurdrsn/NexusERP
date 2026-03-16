@@ -57,13 +57,23 @@ export const productsApi = {
 export const ordersApi = {
     list: () => unwrap(api.get('/orders')),
     create: (payload: unknown) => unwrap(api.post('/orders', payload)),
+    getById: (id: string) => unwrap(api.get(`/orders/${id}`)),
     approve: (id: string) => unwrap(api.post(`/orders/${id}/approve`)),
+    updateStatus: (id: string, status: string) => unwrap(api.put(`/orders/${id}`, { status })),
+};
+
+export const invoicesApi = {
+    list: () => unwrap(api.get('/invoices')),
+    create: (payload: unknown) => unwrap(api.post('/invoices', payload)),
+    issue: (id: string) => unwrap(api.post(`/invoices/${id}/issue`)),
+    pay: (id: string) => unwrap(api.post(`/invoices/${id}/pay`)),
 };
 
 export const stockApi = {
     listCurrent: () => unwrap(api.get('/stock')),
     listMovements: () => unwrap(api.get('/stock/movements')),
     adjust: (payload: unknown) => unwrap(api.post('/stock/adjust', payload)),
+    transfer: (payload: unknown) => unwrap(api.post('/stock/transfer', payload)),
 };
 
 export const purchaseOrdersApi = {
@@ -75,21 +85,36 @@ export const purchaseOrdersApi = {
 export const customersApi = {
     list: () => unwrap(api.get('/customers')),
     create: (payload: unknown) => unwrap(api.post('/customers', payload)),
+    update: (id: string, payload: unknown) => unwrap(api.put(`/customers/${id}`, payload)),
+    remove: (id: string) => unwrap(api.post(`/customers/${id}/delete`)),
 };
 
 export const suppliersApi = {
     list: () => unwrap(api.get('/suppliers')),
     create: (payload: unknown) => unwrap(api.post('/suppliers', payload)),
+    update: (id: string, payload: unknown) => unwrap(api.put(`/suppliers/${id}`, payload)),
+    remove: (id: string) => unwrap(api.post(`/suppliers/${id}/delete`)),
 };
 
 export const warehousesApi = {
     list: () => unwrap(api.get('/warehouses')),
     create: (payload: unknown) => unwrap(api.post('/warehouses', payload)),
+    update: (id: string, payload: unknown) => unwrap(api.put(`/warehouses/${id}`, payload)),
+    remove: (id: string) => unwrap(api.post(`/warehouses/${id}/delete`)),
+};
+
+export const categoriesApi = {
+    list: () => unwrap(api.get('/categories')),
+    create: (payload: unknown) => unwrap(api.post('/categories', payload)),
+    update: (id: number | string, payload: unknown) => unwrap(api.put(`/categories/${id}`, payload)),
+    remove: (id: number | string) => unwrap(api.post(`/categories/${id}/delete`)),
 };
 
 export const rolesApi = {
     list: () => unwrap<RolesResponse>(api.get('/roles')),
     create: (payload: unknown) => unwrap(api.post('/roles', payload)),
+    update: (id: string|number, payload: unknown) => unwrap(api.put(`/roles/${id}`, payload)),
+    remove: (id: string|number) => unwrap(api.delete(`/roles/${id}`)),
 };
 
 export const usersApi = {
