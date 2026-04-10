@@ -1,6 +1,6 @@
 name = "nexus-erp-api"
 main = "src/index.ts"
-compatibility_date = "2026-02-12"
+compatibility_date = "2026-04-07"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
@@ -11,8 +11,8 @@ binding = "CACHE"
 id = "e401665f4ce14cb7bd2894918fcc4bd7"
 
 [[routes]]
-pattern = "api.nexuserp.onurdrsn.com.tr/*"
-zone_name = "onurdrsn.com.tr"
+pattern = "api.nexuserp.onurd.com.tr/*"
+zone_name = "onurd.com.tr"
 
 [observability]
 enabled = false
