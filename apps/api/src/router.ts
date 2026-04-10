@@ -20,8 +20,8 @@ import type { HandlerResponse } from '../functions/utils/apiResponse';
 export type Handler = (event: HandlerEvent, context: HandlerContext) => Promise<HandlerResponse>;
 
 const ALLOWED_ORIGINS = [
-	'https://nexuserp.onurdrsn.com.tr',
-	'https://nexus.onurdrsn.com.tr',
+	'https://nexuserp.onurd.com.tr',
+	'https://nexus.onurd.com.tr',
 	'http://localhost:5173',
 ];
 

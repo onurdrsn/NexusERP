@@ -45,7 +45,7 @@ export const apiResponse = (statusCode: number, data: any): HandlerResponse => {
         statusCode,
         headers: {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': 'https://nexuserp.onurdrsn.com.tr',
+            'Access-Control-Allow-Origin': 'https://nexuserp.onurd.com.tr',
             'Access-Control-Allow-Headers': 'Content-Type, Authorization',
             'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
         },
