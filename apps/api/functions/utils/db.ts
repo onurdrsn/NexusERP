@@ -3,7 +3,7 @@ import { Pool, type PoolClient } from '@neondatabase/serverless';
 const getConnectionString = (): string => {
     const connectionString = process.env.DATABASE_URL;
     if (!connectionString) {
-        throw new Error('DATABASE_URL environment variable is not defined');
+        throw new Error('DB connection string is not defined');
     }
     return connectionString;
 };
